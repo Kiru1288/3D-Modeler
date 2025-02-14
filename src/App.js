@@ -1,5 +1,6 @@
 import React from "react";
 import DrawingBoard from "./Components/DrawingBoard";
+import "./App.css"; 
 
 function App() {
   return (

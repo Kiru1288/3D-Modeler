@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Edges, Plane, SpotLight, PerspectiveCamera } from "@react-three/drei";
-import * as THREE from "three";
+
 
 // ✅ Wall Component (Ensures Proper Positioning)
 const Wall = ({ x1, y1, x2, y2, height, thickness }) => {
