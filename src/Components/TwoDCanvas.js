@@ -126,6 +126,8 @@ const TwoDCanvas = ({ width, height, onDraw, onSwitchMode }) => {
         </div>
       </div>
 
+
+
       {/* 🎨 Canvas */}
       <Stage
         width={width}
