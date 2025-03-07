@@ -1,4 +1,4 @@
-import React, { useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Edges, Plane, SpotLight, PerspectiveCamera } from "@react-three/drei";
 
@@ -20,36 +20,62 @@ const Wall = ({ x1, y1, x2, y2, height, thickness, color }) => {
   );
 };
 
-const Scene = ({ walls = [], is3DMode, wallColor }) => {
-  const { camera, gl } = useThree();
+// ✅ Camera Movement Hook with Debugging Logs
+const useCameraControls = () => {
+  const { camera } = useThree();
+  const speed = 5; 
+  const moveRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    console.log("🎥 Camera Detected:", camera.position);
+
+    const moveCamera = () => {
+      camera.position.x += moveRef.current.x * speed;
+      camera.position.z -= moveRef.current.y * speed;
+
+      console.log("🎯 Updated Camera Position:", camera.position);
+    };
+
+    const interval = setInterval(moveCamera, 16);
+    return () => clearInterval(interval);
+  }, [camera]);
+};
+
+const Scene = ({ walls = [], is3DMode, wallColor }) => {
+  const { camera, gl } = useThree();
+  useCameraControls();
+
+  useEffect(() => {
+    console.log("🔄 is3DMode Changed:", is3DMode);
     if (is3DMode) {
-      console.log("🔄 Resetting Camera for 3D Mode...");
-      camera.position.set(500, 600, 1000); // ✅ Ensuring a proper default position
+      camera.position.set(600, 800, 1200);
       camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+      console.log("✅ Camera Reset for 3D Mode:", camera.position);
     }
   }, [is3DMode, camera]);
 
   return (
     <>
-      <PerspectiveCamera makeDefault position={[500, 600, 1000]} fov={50} />
-      <ambientLight intensity={0.8} />
-      <SpotLight position={[200, 600, 200]} intensity={1.5} castShadow />
+      <PerspectiveCamera makeDefault position={[600, 800, 1200]} fov={50} />
+      <ambientLight intensity={0.9} />
+      <SpotLight position={[300, 700, 300]} intensity={1.5} castShadow />
 
-      {/* ✅ Ensuring correct camera movement */}
-      <OrbitControls 
+      <OrbitControls
         args={[camera, gl.domElement]}
-        enableDamping={true}
-        dampingFactor={0.05}
-        enableRotate={true}  
-        enablePan={true}     
-        enableZoom={true}    
-        screenSpacePanning={true} 
-        minDistance={50}  
-        maxDistance={2000}
-        minPolarAngle={0} 
-        maxPolarAngle={Math.PI / 2.1} 
+        enableDamping
+        dampingFactor={0.1}
+        rotateSpeed={0.8}
+        zoomSpeed={0.6}
+        panSpeed={0.5}
+        enableRotate
+        enablePan
+        enableZoom
+        screenSpacePanning={false}
+        minDistance={100}
+        maxDistance={2500}
+        minPolarAngle={0.1}
+        maxPolarAngle={Math.PI / 2}
       />
 
       <Plane args={[3000, 3000]} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -65,24 +91,26 @@ const Scene = ({ walls = [], is3DMode, wallColor }) => {
 
 const ThreeDCanvas = forwardRef(({ moves = [], is3DMode, selectedColor }, ref) => {
   return (
-    <Canvas
-      style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh" }}
-      shadows
-      gl={{ preserveDrawingBuffer: true, alpha: true }} 
-      camera={{ position: [500, 600, 1000], fov: 50 }} 
-    >
-      <Scene walls={moves} is3DMode={is3DMode} wallColor={selectedColor} />
-      <ExportControls ref={ref} />
-    </Canvas>
+    <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+      <Canvas
+        style={{ width: "100%", height: "100%" }}
+        shadows
+        gl={{ preserveDrawingBuffer: true, alpha: true }}
+        camera={{ position: [600, 800, 1200], fov: 50 }}
+      >
+        <Scene walls={moves} is3DMode={is3DMode} wallColor={selectedColor} />
+        <ExportControls ref={ref} />
+      </Canvas>
+    </div>
   );
 });
 
 const ExportControls = forwardRef((_, ref) => {
-  const { gl, scene } = useThree(); 
+  const { gl, scene } = useThree();
 
   useImperativeHandle(ref, () => ({
-    getScene: () => scene, 
-    getCanvas: () => gl.domElement, 
+    getScene: () => scene,
+    getCanvas: () => gl.domElement,
   }));
 
   return null;
