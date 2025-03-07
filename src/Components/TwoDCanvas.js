@@ -27,6 +27,18 @@ const TwoDCanvas = ({ width, height, onDraw, onSwitchMode }) => {
     }
   };
 
+
+  const colorMap = {
+    room: "rgb(173, 216, 230)",      // Light Blue
+    wall: "rgb(169, 169, 169)",      // Dark Gray
+    surface: "rgb(210, 180, 140)",   // Tan
+    door: "rgb(139, 69, 19)",        // Saddle Brown
+    window: "rgb(135, 206, 250)",    // Light Sky Blue
+    beam: "rgb(105, 105, 105)",      // Dim Gray
+    column: "rgb(139, 0, 0)",        // Dark Red
+  };
+  
+
   const handleMouseMove = (e) => {
     if (newWall) {
       const pos = e.target.getStage().getPointerPosition();

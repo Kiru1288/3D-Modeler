@@ -84,6 +84,8 @@ const updateMeasurements = (walls) => {
       beam: "#696969", // Dim Gray
       column: "#8B0000", // Dark Red
     };
+
+    
   
     const newStructure = {
       id: structures.length,
@@ -122,6 +124,8 @@ const export2D = () => {
 
   console.log("✅ 2D Floorplan Exported Successfully!");
 };
+
+
 
 
 const export3D = () => {
@@ -172,15 +176,97 @@ return (
       <button onClick={() => addStructure("column", 30, 200)}>🏛️ Add Column</button>
     </div>
 
+
+    <button className="hamburger-menu" onClick={() => setIsMenuOpen((prev) => !prev)}
+  style={{
+    fontSize: "24px", padding: "10px", background: "black", color: "gold",
+    border: "2px solid gold", borderRadius: "6px", cursor: "pointer",
+    position: "fixed", top: "80px", left: "20px", zIndex: 1100
+  }}>
+  ☰
+</button>
+
+
+{isSettingsOpen && (
+  <div className="settings-menu" style={{
+    position: "absolute", top: "120px", left: "200px", background: "black",
+    border: "2px solid gold", borderRadius: "5px", padding: "10px",
+    zIndex: 1100, minWidth: "200px"
+  }}>
+    <h3 style={{ color: "gold", marginBottom: "10px" }}>⚙️ Settings</h3>
+
+    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
+      <input type="checkbox" checked={gridVisible} onChange={() => setGridVisible((prev) => !prev)} />
+      Show Grid
+    </label>
+
+    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
+      <input type="checkbox" checked={snapEnabled} onChange={() => setSnapEnabled((prev) => !prev)} />
+      Enable Snapping
+    </label>
+
+    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
+      <input type="checkbox" checked={darkMode} onChange={() => setDarkMode((prev) => !prev)} />
+      Dark Mode
+    </label>
+
+    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
+      Unit:
+      <select value={unit} onChange={(e) => setUnit(e.target.value)} style={{
+        marginLeft: "5px", background: "black", color: "gold",
+        border: "1px solid gold", padding: "3px"
+      }}>
+        <option value="meters">Meters</option>
+        <option value="inches">Inches</option>
+      </select>
+    </label>
+
+    <button onClick={() => setIsSettingsOpen(false)} style={{
+      color: "gold", background: "none", border: "1px solid gold",
+      padding: "5px", cursor: "pointer", marginTop: "10px"
+    }}>Close</button>
+  </div>
+)}
+
+
+
+
+{isMenuOpen && (
+  <div className="dropdown-menu" style={{
+    position: "absolute", top: "120px", left: "20px", background: "black",
+    border: "2px solid gold", borderRadius: "5px", padding: "10px",
+    zIndex: 1100, minWidth: "150px"
+  }}>
+    <button onClick={export2D} style={{
+      color: "gold", background: "none", border: "none",
+      cursor: "pointer", marginTop: "10px"
+    }}>📸 Export 2D</button>
+
+    <button onClick={export3D} style={{
+      color: "gold", background: "none", border: "none",
+      cursor: "pointer"
+    }}>🎥 Export 3D</button>
+
+    <button onClick={() => setIsSettingsOpen((prev) => !prev)} style={{
+      color: "gold", background: "none", border: "none",
+      cursor: "pointer", marginTop: "10px"
+    }}>⚙️ Settings</button>
+  </div>
+)}
+
+
     {/* 🟢 3D Mode Toggle */}
     {is3DMode ? (
-      <ThreeDCanvas
-        ref={threeDCanvasRef}
-        moves={walls}
-        is3DMode={is3DMode}
-        zoomScale={zoomScale}
-        selectedColor={selectedColor}
-      />
+      <ThreeDCanvas 
+      ref={threeDCanvasRef} 
+      moves={walls} 
+      structures={structures} 
+      is3DMode={is3DMode} 
+      zoomScale={zoomScale} 
+      selectedColor={selectedColor} 
+    />
+    
+    
     ) : (
       <TwoDCanvas
         ref={twoDCanvasRef}

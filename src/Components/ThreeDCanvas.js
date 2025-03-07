@@ -90,6 +90,7 @@ const Scene = ({ walls = [], is3DMode, wallColor }) => {
 };
 
 const ThreeDCanvas = forwardRef(({ moves = [], is3DMode, selectedColor }, ref) => {
+
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
       <Canvas
