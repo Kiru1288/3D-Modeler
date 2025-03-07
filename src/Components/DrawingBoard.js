@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import TwoDCanvas from "./TwoDCanvas";
 import ThreeDCanvas from "./ThreeDCanvas";
+import { Stage, Layer, Rect } from "react-konva";
 
 
 const DrawingBoard = () => {
@@ -18,6 +19,36 @@ const DrawingBoard = () => {
   const [selectedColor, setSelectedColor] = useState("#ffffff");
   const twoDCanvasRef = useRef(null);
   const threeDCanvasRef = useRef(null);
+  const [structures, setStructures] = useState([]);
+
+
+
+  
+ 
+  
+
+
+
+
+const renderStructures = () => {
+  return structures.map((structure, index) => (
+    <mesh key={index} position={[0, structure.height / 2, 0]} castShadow receiveShadow>
+      <boxGeometry args={[structure.width, structure.height, structure.width]} />
+      <meshStandardMaterial
+        color={
+          structure.type === "room" ? "lightblue"
+          : structure.type === "wall" ? "gray"
+          : structure.type === "surface" ? "tan"
+          : structure.type === "door" ? "brown"
+          : structure.type === "window" ? "lightgray"
+          : structure.type === "beam" ? "darkgray"
+          : "sienna"
+        }
+      />
+    </mesh>
+  ));
+};
+
 
   useEffect(() => {
     document.body.classList.toggle("dark-mode", darkMode);
@@ -26,7 +57,9 @@ const DrawingBoard = () => {
 
   const handleSwitchMode = () => setIs3DMode((prev) => !prev);
 
-  const updateMeasurements = (walls) => {
+  
+
+const updateMeasurements = (walls) => {
     const newMeasurements = walls.map((wall) => {
       const length = Math.hypot(wall.x2 - wall.x1, wall.y2 - wall.y1);
       return {
@@ -39,9 +72,43 @@ const DrawingBoard = () => {
   };
 
   
-  // 📤 **Export 2D as PNG**
+
+
+  const addStructure = (type, width, height) => {
+    const colorMap = {
+      room: "#ADD8E6", // Light Blue
+      wall: "#A9A9A9", // Dark Gray
+      surface: "#D2B48C", // Tan
+      door: "#8B4513", // Saddle Brown
+      window: "#87CEFA", // Light Sky Blue
+      beam: "#696969", // Dim Gray
+      column: "#8B0000", // Dark Red
+    };
+  
+    const newStructure = {
+      id: structures.length,
+      type,
+      x: 100 + structures.length * 10,
+      y: 100,
+      width,
+      height,
+      color: colorMap[type] || "black",
+    };
+  
+    setStructures((prev) => [...prev, newStructure]);
+  };
+
+  const updateStructure = (id, newX, newY) => {
+    setStructures((prevStructures) =>
+      prevStructures.map((structure) =>
+        structure.id === id ? { ...structure, x: newX, y: newY } : structure
+      )
+    );
+  };
+  
+  
 const export2D = () => {
-  const canvas = document.querySelector("canvas"); // ✅ Ensure we select the right canvas
+  const canvas = document.querySelector("canvas");
 
   if (!canvas) {
     console.warn("⚠️ No 2D canvas found for export!");
@@ -49,7 +116,7 @@ const export2D = () => {
   }
 
   const link = document.createElement("a");
-  link.download = `${projectName}_2D.png`;
+  link.download = `${projectName}_2D.png`; 
   link.href = canvas.toDataURL("image/png");
   link.click();
 
@@ -57,99 +124,101 @@ const export2D = () => {
 };
 
 
-  
-  const export3D = () => {
-    if (!threeDCanvasRef.current || !threeDCanvasRef.current.getCanvas) {
-      console.warn("⚠️ Scene reference not found!");
-      return;
-    }
-  
-    const canvas = threeDCanvasRef.current.getCanvas();
-    const link = document.createElement("a");
-    link.download = `${projectName}_3D.png`;
-    link.href = canvas.toDataURL("image/png"); 
-    link.click();
-  };
-  
-  
-  
-  
-    
+const export3D = () => {
+  if (!threeDCanvasRef.current || !threeDCanvasRef.current.getCanvas) {
+    console.warn("⚠️ Scene reference not found!");
+    return;
+  }
 
-  return (
-    <div className={`w-screen h-screen relative ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}>
-      {measurements.map((dim, index) => (
-        <div key={index} style={{
-          position: "absolute", left: `${dim.x}px`, top: `${dim.y}px`,
-          background: "black", color: "gold", padding: "2px 5px",
-          borderRadius: "5px", border: "1px solid gold", fontSize: "12px"
-        }}>
-          {dim.length}
-        </div>
-      ))}
-
-      <div style={{ position: "fixed", top: "50%", left: "20px", transform: "translateY(-50%)", zIndex: 1100 }}>
-        <input
-          type="color"
-          value={selectedColor}
-          onChange={(e) => setSelectedColor(e.target.value)}
-          style={{
-            width: "40px",
-            height: "40px",
-            border: "2px solid gold",
-            borderRadius: "6px",
-            cursor: "pointer",
-            background: selectedColor,
-          }}
-        />
-      </div>
-
-      <button className="hamburger-menu" onClick={() => setIsMenuOpen((prev) => !prev)}
-        style={{ fontSize: "24px", padding: "10px", background: "black", color: "gold", border: "2px solid gold",
-          borderRadius: "6px", cursor: "pointer", position: "fixed", top: "80px", left: "20px", zIndex: 1100 }}>
-        ☰
-      </button>
-
-      {isMenuOpen && (
-        <div className="dropdown-menu" style={{ position: "absolute", top: "120px", left: "20px", background: "black",
-          border: "2px solid gold", borderRadius: "5px", padding: "10px", zIndex: 1100, minWidth: "150px" }}>
-          <button onClick={() => setIsSettingsOpen((prev) => !prev)} style={{ color: "gold", background: "none", border: "none", cursor: "pointer" }}>⚙️ Settings</button>
-          {isSettingsOpen && (
-            <div style={{ marginTop: "10px" }}>
-              <button onClick={() => setDarkMode((prev) => !prev)} style={{ color: "gold", background: "none", border: "none", cursor: "pointer" }}>
-                {darkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
-              </button>
-              <button onClick={() => setUnit(unit === "meters" ? "feet" : "meters")} style={{ color: "gold", background: "none", border: "none", cursor: "pointer" }}>
-                Unit: {unit === "meters" ? "Feet/Inches" : "Meters/Centimeters"}
-              </button>
-            </div>
-          )}
-          <button onClick={export2D} style={{ color: "gold", background: "none", border: "none", cursor: "pointer", marginTop: "10px" }}>📸 Export 2D</button>
-          <button onClick={export3D} style={{ color: "gold", background: "none", border: "none", cursor: "pointer" }}>🎥 Export 3D</button>
-        </div>
-      )}
-
-      <div className="project-name" style={{
-        textAlign: "center", fontSize: "20px", fontWeight: "bold", color: "gold",
-        padding: "10px", background: "black", borderBottom: "2px solid gold",
-        position: "fixed", top: 60, left: "50%", transform: "translateX(-50%)",
-        width: "100%", zIndex: 1000
-      }}>
-        {projectName}
-      </div>
-
-      {is3DMode ? (
-        <ThreeDCanvas ref={threeDCanvasRef} moves={walls} is3DMode={is3DMode} zoomScale={zoomScale} selectedColor={selectedColor} />
-      ) : (
-        <TwoDCanvas ref={twoDCanvasRef} width={window.innerWidth} height={window.innerHeight} onDraw={(walls) => {
-            setWalls(walls);
-            updateMeasurements(walls);
-          }}
-          gridVisible={gridVisible} snapEnabled={snapEnabled} onSwitchMode={handleSwitchMode} zoomScale={zoomScale}
-          selectedColor={selectedColor} />
-      )}
-    </div>
-  );
+  const canvas = threeDCanvasRef.current.getCanvas();
+  const link = document.createElement("a");
+  link.download = `${projectName}_3D.png`; 
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 };
+
+const addRoom = () => setStructures((prev) => [...prev, { type: "room", width: 300, height: 300 }]);
+const addWall = () => setStructures((prev) => [...prev, { type: "wall", width: 200, height: 20 }]);
+const addSurface = () => setStructures((prev) => [...prev, { type: "surface", width: 250, height: 10 }]);
+const addDoor = () => setStructures((prev) => [...prev, { type: "door", width: 80, height: 200 }]);
+const addWindow = () => setStructures((prev) => [...prev, { type: "window", width: 120, height: 100 }]);
+const addBeam = () => setStructures((prev) => [...prev, { type: "beam", width: 100, height: 20 }]);
+const addColumn = () => setStructures((prev) => [...prev, { type: "column", width: 30, height: 200 }]);
+
+
+
+  
+
+return (
+  <div className={`w-screen h-screen relative ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}>
+    {measurements.map((dim, index) => (
+      <div key={index} style={{
+        position: "absolute", left: `${dim.x}px`, top: `${dim.y}px`,
+        background: "black", color: "gold", padding: "2px 5px",
+        borderRadius: "5px", border: "1px solid gold", fontSize: "12px"
+      }}>
+        {dim.length}
+      </div>
+    ))}
+
+    {/* 🛠 Sidebar Controls for Adding Structures */}
+    <div style={{ position: "fixed", top: "10px", right: "20px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 1100 }}>
+      <button onClick={() => addStructure("room", 300, 300)}>🛋️ Add Room</button>
+      <button onClick={() => addStructure("wall", 200, 20)}>🧱 Add Wall</button>
+      <button onClick={() => addStructure("surface", 250, 10)}>🟤 Add Surface</button>
+      <button onClick={() => addStructure("door", 80, 200)}>🚪 Add Door</button>
+      <button onClick={() => addStructure("window", 120, 100)}>🪟 Add Window</button>
+      <button onClick={() => addStructure("beam", 100, 20)}>🔩 Add Beam</button>
+      <button onClick={() => addStructure("column", 30, 200)}>🏛️ Add Column</button>
+    </div>
+
+    {/* 🟢 3D Mode Toggle */}
+    {is3DMode ? (
+      <ThreeDCanvas
+        ref={threeDCanvasRef}
+        moves={walls}
+        is3DMode={is3DMode}
+        zoomScale={zoomScale}
+        selectedColor={selectedColor}
+      />
+    ) : (
+      <TwoDCanvas
+        ref={twoDCanvasRef}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        onDraw={(walls) => {
+          setWalls(walls);
+          updateMeasurements(walls);
+        }}
+        gridVisible={gridVisible}
+        snapEnabled={snapEnabled}
+        onSwitchMode={handleSwitchMode}
+        zoomScale={zoomScale}
+        selectedColor={selectedColor}
+      />
+    )}
+
+    {/* 🟡 Konva 2D Structures */}
+    <Stage width={window.innerWidth} height={window.innerHeight} style={{ background: "#ddd" }}>
+      <Layer>
+        {structures.map((structure) => (
+          <Rect
+            key={structure.id}
+            x={structure.x}
+            y={structure.y}
+            width={structure.width}
+            height={structure.height}
+            fill={structure.color}
+            draggable
+            onDragEnd={(e) => updateStructure(structure.id, e.target.x(), e.target.y())}
+          />
+        ))}
+      </Layer>
+    </Stage>
+  </div>
+);
+
+
+}
 
 export default DrawingBoard;

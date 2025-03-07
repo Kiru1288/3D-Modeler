@@ -21,21 +21,36 @@ const Wall = ({ x1, y1, x2, y2, height, thickness, color }) => {
 };
 
 const Scene = ({ walls = [], is3DMode, wallColor }) => {
-  useEffect(() => {
-    console.log("✅ Walls in 3D:", walls);
-  }, [walls]);
+  const { camera, gl } = useThree();
 
-  const cameraProps = is3DMode
-    ? { position: [0, 800, 800], fov: 40 }
-    : { position: [0, 1000, 0], fov: 90 };
+  useEffect(() => {
+    if (is3DMode) {
+      console.log("🔄 Resetting Camera for 3D Mode...");
+      camera.position.set(500, 600, 1000); // ✅ Ensuring a proper default position
+      camera.lookAt(0, 0, 0);
+    }
+  }, [is3DMode, camera]);
 
   return (
     <>
-      <PerspectiveCamera makeDefault {...cameraProps} />
-      <ambientLight intensity={1.0} />
-      <SpotLight position={[150, 500, 150]} intensity={1.5} castShadow />
+      <PerspectiveCamera makeDefault position={[500, 600, 1000]} fov={50} />
+      <ambientLight intensity={0.8} />
+      <SpotLight position={[200, 600, 200]} intensity={1.5} castShadow />
 
-      <OrbitControls enablePan enableZoom enableRotate={is3DMode} maxPolarAngle={is3DMode ? Math.PI / 2.2 : 0} minPolarAngle={0} />
+      {/* ✅ Ensuring correct camera movement */}
+      <OrbitControls 
+        args={[camera, gl.domElement]}
+        enableDamping={true}
+        dampingFactor={0.05}
+        enableRotate={true}  
+        enablePan={true}     
+        enableZoom={true}    
+        screenSpacePanning={true} 
+        minDistance={50}  
+        maxDistance={2000}
+        minPolarAngle={0} 
+        maxPolarAngle={Math.PI / 2.1} 
+      />
 
       <Plane args={[3000, 3000]} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <meshStandardMaterial color="#F5DEB3" />
@@ -48,31 +63,29 @@ const Scene = ({ walls = [], is3DMode, wallColor }) => {
   );
 };
 
-// ✅ Corrected: `useThree` is now inside the Canvas Component
 const ThreeDCanvas = forwardRef(({ moves = [], is3DMode, selectedColor }, ref) => {
   return (
     <Canvas
       style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh" }}
       shadows
-      gl={{ preserveDrawingBuffer: true, alpha: true }} // ✅ Fix Transparent Export
+      gl={{ preserveDrawingBuffer: true, alpha: true }} 
+      camera={{ position: [500, 600, 1000], fov: 50 }} 
     >
       <Scene walls={moves} is3DMode={is3DMode} wallColor={selectedColor} />
-
-      <ExportControls ref={ref} /> {/* ✅ This ensures export works */}
+      <ExportControls ref={ref} />
     </Canvas>
   );
 });
 
-// ✅ Move `useThree` INSIDE the Canvas Component for Export
 const ExportControls = forwardRef((_, ref) => {
-  const { gl, scene } = useThree(); // ✅ Use `useThree` properly inside Canvas
+  const { gl, scene } = useThree(); 
 
   useImperativeHandle(ref, () => ({
-    getScene: () => scene, // ✅ Expose scene for exporting
-    getCanvas: () => gl.domElement, // ✅ Expose canvas element for PNG export
+    getScene: () => scene, 
+    getCanvas: () => gl.domElement, 
   }));
 
-  return null; // ✅ This component doesn't render anything
+  return null;
 });
 
 export default ThreeDCanvas;
