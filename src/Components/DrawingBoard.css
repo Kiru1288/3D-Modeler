@@ -1,0 +1,204 @@
+/* Define global variables for colors, spacing, and borders */
+:root {
+  --bg-dark: #1E1E1E;
+  --bg-secondary: #252525;
+  --bg-tertiary: #2D2D2D;
+  --highlight: #FFD700;
+  --light-bg: #ffffff;
+  --active-bg: #e0e0e0;
+  --border-color: #ccc;
+  --active-border: #999;
+  --font-color: var(--highlight);
+  --padding-small: 8px;
+  --padding-medium: 15px;
+  --padding-large: 20px;
+  --border-radius: 4px;
+}
+
+/* App Container */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background: var(--bg-dark);
+}
+
+/* Top Toolbar */
+.top-toolbar {
+  position: fixed;
+  top: 0;
+  left: 280px;
+  right: 0;
+  height: 60px;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--padding-large);
+  z-index: 100;
+  border-bottom: 1px solid var(--highlight);
+}
+
+.toolbar-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--padding-small) 16px;
+  border: 1px solid var(--border-color);
+  background: var(--light-bg);
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.toolbar-btn.active {
+  background: var(--active-bg);
+  border-color: var(--active-border);
+}
+
+.button-icon {
+  font-size: 1.2em;
+}
+
+.button-label {
+  font-size: 0.9em;
+}
+
+.color-scheme-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--font-color);
+}
+
+.color-scheme-select {
+  background: #333;
+  border: 1px solid var(--highlight);
+  color: var(--highlight);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background: var(--bg-secondary);
+  padding: var(--padding-large);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-right: 1px solid var(--highlight);
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.view-btn {
+  flex: 1;
+  padding: var(--padding-small);
+  border: 1px solid var(--border-color);
+  background: var(--light-bg);
+  cursor: pointer;
+}
+
+.view-btn.active {
+  background: var(--active-bg);
+  border-color: var(--active-border);
+}
+
+/* Elements Section */
+.elements-section {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: var(--padding-medium);
+}
+
+.elements-section h2 {
+  color: var(--font-color);
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.elements-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.element-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--padding-small);
+  border: 1px solid var(--border-color);
+  background: var(--light-bg);
+  cursor: pointer;
+}
+
+.element-btn.active {
+  background: var(--active-bg);
+  border-color: var(--active-border);
+}
+
+.element-icon {
+  font-size: 1.5em;
+}
+
+.element-label {
+  font-size: 0.8em;
+}
+
+/* Settings Section */
+.settings-section {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: var(--padding-medium);
+}
+
+.settings-section h2 {
+  color: var(--font-color);
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--font-color);
+}
+
+.unit-select {
+  background: #333;
+  border: 1px solid var(--highlight);
+  color: var(--highlight);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
+}
+
+/* Canvas Area */
+.canvas-area {
+  flex: 1;
+  margin-top: 60px;
+  background: var(--bg-dark);
+  position: relative;
+}
+
+.drawing-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
