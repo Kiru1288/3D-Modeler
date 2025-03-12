@@ -1,310 +1,483 @@
-import React, { useState, useEffect, useRef } from "react";
-import TwoDCanvas from "./TwoDCanvas";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useContext
+} from 'react';
+import { Stage, Layer, Line } from "react-konva";
 import ThreeDCanvas from "./ThreeDCanvas";
-import { Stage, Layer, Rect } from "react-konva";
+import "./DrawingBoard.css";
+import { FloorPlanContext } from '../context/FloorPlanContext';
+
+// Global constants
+const GRID_SPACING = 20;
+const SIDEBAR_WIDTH = 280;
+
+function DrawingBoard() {
+  // Shared floor plan context
+  const { walls, structures, addWall, addStructure } = useContext(FloorPlanContext);
+  
 
 
-const DrawingBoard = () => {
+
+  // Local state declarations
   const [is3DMode, setIs3DMode] = useState(false);
-  const [walls, setWalls] = useState([]);
-  const [gridVisible, setGridVisible] = useState(true);
+  const [currentTool, setCurrentTool] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentLine, setCurrentLine] = useState(null);
+  const [showGrid, setShowGrid] = useState(true);
   const [snapEnabled, setSnapEnabled] = useState(true);
-  const [projectName, setProjectName] = useState("Floorplan");
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
-  const [unit, setUnit] = useState("meters");
-  const [zoomScale, setZoomScale] = useState(1);
-  const [measurements, setMeasurements] = useState([]);
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
-  const twoDCanvasRef = useRef(null);
-  const threeDCanvasRef = useRef(null);
-  const [structures, setStructures] = useState([]);
+  const [darkMode, setDarkMode] = useState(false);
+  const [unit, setUnit] = useState("Meters");
+  const [colorScheme, setColorScheme] = useState("Light");
+  const [currentStructure, setCurrentStructure] = useState(null);
+  const [canvasSize, setCanvasSize] = useState({
+    width: window.innerWidth - SIDEBAR_WIDTH,
+    height: window.innerHeight
+  });
+  const [history, setHistory] = useState([{ walls: [], structures: [] }]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+
+  // ---------------------------
+  // History Management
+  // ---------------------------
+  const addToHistory = useCallback(() => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({
+      walls: [...walls],
+      structures: [...structures],
+    });
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex, walls, structures]);
+
+  const toggleView = useCallback(() => {
+    setIs3DMode((prev) => !prev);
+  }, []);
 
 
 
-  
- 
-  
 
 
-
-
-const renderStructures = () => {
-  return structures.map((structure, index) => (
-    <mesh key={index} position={[0, structure.height / 2, 0]} castShadow receiveShadow>
-      <boxGeometry args={[structure.width, structure.height, structure.width]} />
-      <meshStandardMaterial
-        color={
-          structure.type === "room" ? "lightblue"
-          : structure.type === "wall" ? "gray"
-          : structure.type === "surface" ? "tan"
-          : structure.type === "door" ? "brown"
-          : structure.type === "window" ? "lightgray"
-          : structure.type === "beam" ? "darkgray"
-          : "sienna"
-        }
-      />
-    </mesh>
-  ));
-};
-
-
+  // ---------------------------
+  // Event Listeners
+  // ---------------------------
+  // Window resize handler to update canvas size
   useEffect(() => {
-    document.body.classList.toggle("dark-mode", darkMode);
-    localStorage.setItem("darkMode", darkMode);
+    const handleResize = () => {
+      setCanvasSize({
+        width: window.innerWidth - SIDEBAR_WIDTH,
+        height: window.innerHeight
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ---------------------------
+// Undo/Redo Handlers
+// ---------------------------
+const handleUndo = useCallback(() => {
+  if (historyIndex > 0) {
+    const prevState = history[historyIndex - 1]; 
+    if (prevState) {
+      addWall(prevState.walls);
+      addStructure(prevState.structures);
+    }
+    setHistoryIndex(historyIndex - 1);
+  }
+}, [history, historyIndex, addWall, addStructure]);
+
+
+const handleRedo = useCallback(() => {
+  if (historyIndex < history.length - 1) {
+    const nextState = history[historyIndex + 1]; 
+    if (nextState) {
+      addWall(nextState.walls);
+      addStructure(nextState.structures);
+    }
+    setHistoryIndex(historyIndex + 1);
+  }
+}, [history, historyIndex, addWall, addStructure]);
+
+// ---------------------------
+// Keyboard event for undo/redo
+// ---------------------------
+useEffect(() => {
+  const handleKeyboard = (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key.toLowerCase() === "z") {
+        e.shiftKey ? handleRedo() : handleUndo();
+        e.preventDefault();
+      } else if (e.key.toLowerCase() === "y") {
+        handleRedo();
+        e.preventDefault();
+      }
+    }
+  };
+  window.addEventListener("keydown", handleKeyboard);
+  return () => window.removeEventListener("keydown", handleKeyboard);
+}, [handleRedo, handleUndo]);
+
+
+  // Record history whenever walls or structures change
+  useEffect(() => {
+    addToHistory();
+  }, [walls, structures, addToHistory]);
+
+  // ---------------------------
+  // File Upload Handler
+  // ---------------------------
+  const handleUpload = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.jpg,.png,.pdf';
+    input.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        console.log("File selected:", file.name);
+        // Add your file processing logic here
+      }
+    };
+    input.click();
+  }, []);
+
+  // ---------------------------
+  // Mode & Tool Handling
+  // ---------------------------
+  // Handle tool selection with confirmation for unfinished room drawing
+  const handleToolSelect = useCallback((toolType) => {
+    console.log('Tool selected:', toolType);
+    setCurrentTool(toolType);
+    // Reset drawing states
+    setIsDrawing(false);
+    setCurrentLine(null);
+    setCurrentStructure(null);
+  }, []);
+
+  // ---------------------------
+  // Toolbar and Element Buttons
+  // ---------------------------
+  const toolbarButtons = [
+    { id: 'upload', label: 'Upload 2D Floorplan', action: handleUpload, icon: '📁' },
+    { id: 'wall', label: 'Draw Wall', action: () => handleToolSelect('wall'), icon: '🧱' },
+    { id: 'room', label: 'Draw Room', action: () => handleToolSelect('room'), icon: '🏠' },
+    { id: 'door', label: 'Place Door', action: () => handleToolSelect('door'), icon: '🚪' },
+    { id: 'window', label: 'Place Window', action: () => handleToolSelect('window'), icon: '🪟' },
+    { id: 'surface', label: 'Add Surface', action: () => handleToolSelect('surface'), icon: '⬜' },
+    { id: 'placeStructural', label: 'Place Structural', action: () => handleToolSelect('structural'), icon: '➖' }
+  ];
+
+  const elementButtons = [
+    { id: 'wall', icon: '🧱', label: 'Wall', action: () => handleToolSelect('wall') },
+    { id: 'room', icon: '🏠', label: 'Room', action: () => handleToolSelect('room') },
+    { id: 'surface', icon: '⬜', label: 'Surface', action: () => handleToolSelect('surface') },
+    { id: 'door', icon: '🚪', label: 'Door', action: () => handleToolSelect('door') },
+    { id: 'window', icon: '🪟', label: 'Window', action: () => handleToolSelect('window') },
+    { id: 'beam', icon: '➖', label: 'Beam', action: () => handleToolSelect('beam') },
+    { id: 'column', icon: '⬛', label: 'Column', action: () => handleToolSelect('column') }
+  ];
+
+  // ---------------------------
+  // Mouse Event Handlers
+  // ---------------------------
+  const handleDrawStart = useCallback((e) => {
+    const pos = e.target.getStage().getPointerPosition();
+    if (!pos) return;
+    console.log('Draw start position:', pos);
+    const snappedPos = snapEnabled
+      ? {
+          x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
+          y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING
+        }
+      : pos;
+
+    if (currentTool === 'wall') {
+      setIsDrawing(true);
+      setCurrentLine({
+        x1: snappedPos.x,
+        y1: snappedPos.y,
+        x2: snappedPos.x,
+        y2: snappedPos.y
+      });
+    }
+  }, [currentTool, snapEnabled]);
+
+  const handleDrawMove = useCallback((e) => {
+    if (!isDrawing) return;
+    const pos = e.target.getStage().getPointerPosition();
+    if (!pos) return;
+    console.log('Draw move position:', pos);
+    const snappedPos = snapEnabled
+      ? {
+          x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
+          y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING
+        }
+      : pos;
+    setCurrentLine(prev => prev ? { ...prev, x2: snappedPos.x, y2: snappedPos.y } : null);
+  }, [isDrawing, snapEnabled]);
+
+  const handleDrawEnd = useCallback(() => {
+    if (!isDrawing) return;
+    console.log('Draw end with line:', currentLine);
+    if (currentTool === 'wall' && currentLine) {
+      addWall(currentLine);
+    }
+    setIsDrawing(false);
+    setCurrentLine(null);
+  }, [isDrawing, currentLine, currentTool, addWall]);
+
+  const handleDoubleClick = useCallback(() => {
+    if (currentTool === 'room' && currentStructure && currentStructure.points.length >= 4) {
+      if (currentStructure) {
+        addStructure(currentStructure);
+      }
+      setCurrentStructure(null);
+      setCurrentTool(null);
+    }
+  }, [currentTool, currentStructure, addStructure]);
+
+  // ---------------------------
+  // Render Helpers
+  // ---------------------------
+  // Render grid lines based on canvas size and dark mode
+  const renderGrid = useCallback(() => {
+    const gridLines = [];
+    const { width, height } = canvasSize;
+    for (let i = 0; i < width; i += GRID_SPACING) {
+      gridLines.push(
+        <Line
+          key={`v${i}`}
+          points={[i, 0, i, height]}
+          stroke={darkMode ? "#333" : "#ddd"}
+          strokeWidth={i % 100 === 0 ? 1 : 0.5}
+        />
+      );
+    }
+    for (let i = 0; i < height; i += GRID_SPACING) {
+      gridLines.push(
+        <Line
+          key={`h${i}`}
+          points={[0, i, width, i]}
+          stroke={darkMode ? "#333" : "#ddd"}
+          strokeWidth={i % 100 === 0 ? 1 : 0.5}
+        />
+      );
+    }
+    return gridLines;
+  }, [canvasSize, darkMode]);
+
+  // Render structure based on its type
+  const renderStructure = useCallback((structure) => {
+    if (!structure) return null;
+    switch (structure.type) {
+      case 'room':
+        return (
+          <Line
+            key={structure.id}
+            points={structure.points}
+            stroke={darkMode ? "#fff" : "#000"}
+            strokeWidth={2}
+            closed
+          />
+        );
+      case 'door':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke={darkMode ? "#fff" : "#000"}
+            strokeWidth={2}
+            closed
+          />
+        );
+      case 'window':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height
+            ]}
+            stroke={darkMode ? "#88ccff" : "#4488ff"}
+            strokeWidth={2}
+            closed
+          />
+        );
+      default:
+        return null;
+    }
   }, [darkMode]);
 
-  const handleSwitchMode = () => setIs3DMode((prev) => !prev);
-
+  // ---------------------------
+  // Undo/Redo Handlers
+  // ---------------------------
   
+  // ---------------------------
+  // Render JSX
+  // ---------------------------
+  return (
+    <div className={`app-container ${darkMode ? 'dark' : 'light'}`}>
+      {/* Top Toolbar */}
+      <div className="top-toolbar">
+        <div className="toolbar-buttons">
+          {toolbarButtons.map(button => (
+            <button
+              key={button.id}
+              className={`toolbar-btn ${currentTool === button.id ? 'active' : ''}`}
+              onClick={button.action}
+            >
+              <span className="button-icon">{button.icon}</span>
+              <span className="button-label">{button.label}</span>
+            </button>
+          ))}
 
-const updateMeasurements = (walls) => {
-    const newMeasurements = walls.map((wall) => {
-      const length = Math.hypot(wall.x2 - wall.x1, wall.y2 - wall.y1);
-      return {
-        x: (wall.x1 + wall.x2) / 2,
-        y: (wall.y1 + wall.y2) / 2,
-        length: unit === "meters" ? `${(length / 100).toFixed(2)} m` : `${(length / 2.54).toFixed(2)} in`,
-      };
-    });
-    setMeasurements(newMeasurements);
-  };
+          {/*  2D/3D Toggle Button  */}
+          <button 
+            className={`toolbar-btn ${is3DMode ? 'active' : ''}`} 
+            onClick={toggleView}
+          >
+            <span className="button-icon">🖼️</span>
+            <span className="button-label">{is3DMode ? "Switch to 2D" : "Switch to 3D"}</span>
+          </button>
+        </div>
 
-  
-
-
-  const addStructure = (type, width, height) => {
-    const colorMap = {
-      room: "#ADD8E6", // Light Blue
-      wall: "#A9A9A9", // Dark Gray
-      surface: "#D2B48C", // Tan
-      door: "#8B4513", // Saddle Brown
-      window: "#87CEFA", // Light Sky Blue
-      beam: "#696969", // Dim Gray
-      column: "#8B0000", // Dark Red
-    };
-
-    
-  
-    const newStructure = {
-      id: structures.length,
-      type,
-      x: 100 + structures.length * 10,
-      y: 100,
-      width,
-      height,
-      color: colorMap[type] || "black",
-    };
-  
-    setStructures((prev) => [...prev, newStructure]);
-  };
-
-  const updateStructure = (id, newX, newY) => {
-    setStructures((prevStructures) =>
-      prevStructures.map((structure) =>
-        structure.id === id ? { ...structure, x: newX, y: newY } : structure
-      )
-    );
-  };
-  
-  
-const export2D = () => {
-  const canvas = document.querySelector("canvas");
-
-  if (!canvas) {
-    console.warn("⚠️ No 2D canvas found for export!");
-    return;
-  }
-
-  const link = document.createElement("a");
-  link.download = `${projectName}_2D.png`; 
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-
-  console.log("✅ 2D Floorplan Exported Successfully!");
-};
-
-
-
-
-const export3D = () => {
-  if (!threeDCanvasRef.current || !threeDCanvasRef.current.getCanvas) {
-    console.warn("⚠️ Scene reference not found!");
-    return;
-  }
-
-  const canvas = threeDCanvasRef.current.getCanvas();
-  const link = document.createElement("a");
-  link.download = `${projectName}_3D.png`; 
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-};
-
-const addRoom = () => setStructures((prev) => [...prev, { type: "room", width: 300, height: 300 }]);
-const addWall = () => setStructures((prev) => [...prev, { type: "wall", width: 200, height: 20 }]);
-const addSurface = () => setStructures((prev) => [...prev, { type: "surface", width: 250, height: 10 }]);
-const addDoor = () => setStructures((prev) => [...prev, { type: "door", width: 80, height: 200 }]);
-const addWindow = () => setStructures((prev) => [...prev, { type: "window", width: 120, height: 100 }]);
-const addBeam = () => setStructures((prev) => [...prev, { type: "beam", width: 100, height: 20 }]);
-const addColumn = () => setStructures((prev) => [...prev, { type: "column", width: 30, height: 200 }]);
-
-
-
-  
-
-return (
-  <div className={`w-screen h-screen relative ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}>
-    {measurements.map((dim, index) => (
-      <div key={index} style={{
-        position: "absolute", left: `${dim.x}px`, top: `${dim.y}px`,
-        background: "black", color: "gold", padding: "2px 5px",
-        borderRadius: "5px", border: "1px solid gold", fontSize: "12px"
-      }}>
-        {dim.length}
+        <div className="color-scheme-selector">
+          <span>Color Scheme:</span>
+          <select 
+            value={colorScheme}
+            onChange={(e) => setColorScheme(e.target.value)}
+            className="color-scheme-select"
+          >
+            <option value="Light">Light</option>
+            <option value="Dark">Dark</option>
+          </select>
+        </div>
       </div>
-    ))}
 
-    {/* 🛠 Sidebar Controls for Adding Structures */}
-    <div style={{ position: "fixed", top: "10px", right: "20px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 1100 }}>
-      <button onClick={() => addStructure("room", 300, 300)}>🛋️ Add Room</button>
-      <button onClick={() => addStructure("wall", 200, 20)}>🧱 Add Wall</button>
-      <button onClick={() => addStructure("surface", 250, 10)}>🟤 Add Surface</button>
-      <button onClick={() => addStructure("door", 80, 200)}>🚪 Add Door</button>
-      <button onClick={() => addStructure("window", 120, 100)}>🪟 Add Window</button>
-      <button onClick={() => addStructure("beam", 100, 20)}>🔩 Add Beam</button>
-      <button onClick={() => addStructure("column", 30, 200)}>🏛️ Add Column</button>
+      {/* Left Sidebar */}
+      <div className="sidebar">
+        <div className="view-toggle">
+          <button 
+            className={`view-btn ${!is3DMode ? 'active' : ''}`}
+            onClick={() => setIs3DMode(false)}
+          >
+            2D View
+          </button>
+          <button 
+            className={`view-btn ${is3DMode ? 'active' : ''}`}
+            onClick={() => setIs3DMode(true)}
+          >
+            3D View
+          </button>
+        </div>
+        <div className="elements-section">
+          <h2>Add Elements</h2>
+          <div className="elements-grid">
+            {elementButtons.map(element => (
+              <button
+                key={element.id}
+                className={`element-btn ${currentTool === element.id ? 'active' : ''}`}
+                onClick={element.action}
+              >
+                <span className="element-icon">{element.icon}</span>
+                <span className="element-label">{element.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="settings-section">
+          <h2>Settings</h2>
+          <div className="settings-list">
+            <label className="setting-item">
+              <input
+                type="checkbox"
+                checked={showGrid}
+                onChange={() => setShowGrid(!showGrid)}
+              />
+              Show Grid
+            </label>
+            <label className="setting-item">
+              <input
+                type="checkbox"
+                checked={snapEnabled}
+                onChange={() => setSnapEnabled(!snapEnabled)}
+              />
+              Enable Snapping
+            </label>
+            <label className="setting-item">
+              <input
+                type="checkbox"
+                checked={darkMode}
+                onChange={() => setDarkMode(!darkMode)}
+              />
+              Dark Mode
+            </label>
+            <div className="setting-item">
+              <span>Unit:</span>
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="unit-select"
+              >
+                <option value="Meters">Meters</option>
+                <option value="Feet">Feet</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Canvas Area */}
+      <div className="canvas-area">
+        {is3DMode ? (
+          <>
+            <ThreeDCanvas
+              walls={walls.map(wall => ({
+                x1: wall.x1,
+                y1: wall.y1,
+                x2: wall.x2,
+                y2: wall.y2,
+                height: 30,  
+                thickness: 2 
+              }))}
+              is3DMode={is3DMode} 
+            />
+          </>
+        ) : (
+          <Stage
+            width={canvasSize.width}
+            height={canvasSize.height}
+            className="drawing-stage"
+            onMouseDown={handleDrawStart}
+            onMouseMove={handleDrawMove}
+            onMouseUp={handleDrawEnd}
+            onDblClick={handleDoubleClick}
+          >
+            <Layer>
+              {showGrid && renderGrid()}
+              {walls.map((wall, i) => (
+                <Line
+                  key={`wall-${i}`}
+                  points={[wall.x1, wall.y1, wall.x2, wall.y2]}
+                  stroke={darkMode ? "#fff" : "#000"}
+                  strokeWidth={2}
+                />
+              ))}
+            </Layer>
+          </Stage>
+        )}
+      </div>
     </div>
-
-
-    <button className="hamburger-menu" onClick={() => setIsMenuOpen((prev) => !prev)}
-  style={{
-    fontSize: "24px", padding: "10px", background: "black", color: "gold",
-    border: "2px solid gold", borderRadius: "6px", cursor: "pointer",
-    position: "fixed", top: "80px", left: "20px", zIndex: 1100
-  }}>
-  ☰
-</button>
-
-
-{isSettingsOpen && (
-  <div className="settings-menu" style={{
-    position: "absolute", top: "120px", left: "200px", background: "black",
-    border: "2px solid gold", borderRadius: "5px", padding: "10px",
-    zIndex: 1100, minWidth: "200px"
-  }}>
-    <h3 style={{ color: "gold", marginBottom: "10px" }}>⚙️ Settings</h3>
-
-    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
-      <input type="checkbox" checked={gridVisible} onChange={() => setGridVisible((prev) => !prev)} />
-      Show Grid
-    </label>
-
-    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
-      <input type="checkbox" checked={snapEnabled} onChange={() => setSnapEnabled((prev) => !prev)} />
-      Enable Snapping
-    </label>
-
-    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
-      <input type="checkbox" checked={darkMode} onChange={() => setDarkMode((prev) => !prev)} />
-      Dark Mode
-    </label>
-
-    <label style={{ color: "white", display: "block", marginBottom: "5px" }}>
-      Unit:
-      <select value={unit} onChange={(e) => setUnit(e.target.value)} style={{
-        marginLeft: "5px", background: "black", color: "gold",
-        border: "1px solid gold", padding: "3px"
-      }}>
-        <option value="meters">Meters</option>
-        <option value="inches">Inches</option>
-      </select>
-    </label>
-
-    <button onClick={() => setIsSettingsOpen(false)} style={{
-      color: "gold", background: "none", border: "1px solid gold",
-      padding: "5px", cursor: "pointer", marginTop: "10px"
-    }}>Close</button>
-  </div>
-)}
-
-
-
-
-{isMenuOpen && (
-  <div className="dropdown-menu" style={{
-    position: "absolute", top: "120px", left: "20px", background: "black",
-    border: "2px solid gold", borderRadius: "5px", padding: "10px",
-    zIndex: 1100, minWidth: "150px"
-  }}>
-    <button onClick={export2D} style={{
-      color: "gold", background: "none", border: "none",
-      cursor: "pointer", marginTop: "10px"
-    }}>📸 Export 2D</button>
-
-    <button onClick={export3D} style={{
-      color: "gold", background: "none", border: "none",
-      cursor: "pointer"
-    }}>🎥 Export 3D</button>
-
-    <button onClick={() => setIsSettingsOpen((prev) => !prev)} style={{
-      color: "gold", background: "none", border: "none",
-      cursor: "pointer", marginTop: "10px"
-    }}>⚙️ Settings</button>
-  </div>
-)}
-
-
-    {/* 🟢 3D Mode Toggle */}
-    {is3DMode ? (
-      <ThreeDCanvas 
-      ref={threeDCanvasRef} 
-      moves={walls} 
-      structures={structures} 
-      is3DMode={is3DMode} 
-      zoomScale={zoomScale} 
-      selectedColor={selectedColor} 
-    />
-    
-    
-    ) : (
-      <TwoDCanvas
-        ref={twoDCanvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
-        onDraw={(walls) => {
-          setWalls(walls);
-          updateMeasurements(walls);
-        }}
-        gridVisible={gridVisible}
-        snapEnabled={snapEnabled}
-        onSwitchMode={handleSwitchMode}
-        zoomScale={zoomScale}
-        selectedColor={selectedColor}
-      />
-    )}
-
-    {/* 🟡 Konva 2D Structures */}
-    <Stage width={window.innerWidth} height={window.innerHeight} style={{ background: "#ddd" }}>
-      <Layer>
-        {structures.map((structure) => (
-          <Rect
-            key={structure.id}
-            x={structure.x}
-            y={structure.y}
-            width={structure.width}
-            height={structure.height}
-            fill={structure.color}
-            draggable
-            onDragEnd={(e) => updateStructure(structure.id, e.target.x(), e.target.y())}
-          />
-        ))}
-      </Layer>
-    </Stage>
-  </div>
-);
-
-
+  );
 }
 
 export default DrawingBoard;
