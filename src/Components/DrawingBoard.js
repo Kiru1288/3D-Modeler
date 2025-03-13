@@ -9,6 +9,9 @@ import ThreeDCanvas from "./ThreeDCanvas";
 import "./DrawingBoard.css";
 import { FloorPlanContext } from '../context/FloorPlanContext';
 
+import { useLoader } from "@react-three/fiber";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+
 // Global constants
 const GRID_SPACING = 20;
 const SIDEBAR_WIDTH = 280;
@@ -37,6 +40,12 @@ function DrawingBoard() {
   });
   const [history, setHistory] = useState([{ walls: [], structures: [] }]);
   const [historyIndex, setHistoryIndex] = useState(0);
+
+  const Door = ({ position, rotation }) => {
+    const gltf = useLoader(GLTFLoader, "/models/door.glb"); 
+    return <primitive object={gltf.scene} position={position} rotation={rotation} />;
+  };
+  
 
   // ---------------------------
   // History Management
@@ -129,18 +138,28 @@ useEffect(() => {
   // File Upload Handler
   // ---------------------------
   const handleUpload = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.jpg,.png,.pdf';
-    input.onchange = (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        console.log("File selected:", file.name);
-        // Add your file processing logic here
-      }
-    };
-    input.click();
+    const canvas = document.querySelector("canvas"); 
+    if (!canvas) {
+      console.error("Canvas not found!");
+      return;
+    }
+  
+    try {
+      const image = canvas.toDataURL("image/png"); 
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = "floorplan.png"; 
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading floor plan:", error);
+    }
   }, []);
+  
+  
+  
+
 
   // ---------------------------
   // Mode & Tool Handling
@@ -159,23 +178,17 @@ useEffect(() => {
   // Toolbar and Element Buttons
   // ---------------------------
   const toolbarButtons = [
-    { id: 'upload', label: 'Upload 2D Floorplan', action: handleUpload, icon: '📁' },
+    { id: "upload", label: "Upload 2D Floorplan", action: handleUpload, icon: "📁" },
+
     { id: 'wall', label: 'Draw Wall', action: () => handleToolSelect('wall'), icon: '🧱' },
     { id: 'room', label: 'Draw Room', action: () => handleToolSelect('room'), icon: '🏠' },
-    { id: 'door', label: 'Place Door', action: () => handleToolSelect('door'), icon: '🚪' },
-    { id: 'window', label: 'Place Window', action: () => handleToolSelect('window'), icon: '🪟' },
-    { id: 'surface', label: 'Add Surface', action: () => handleToolSelect('surface'), icon: '⬜' },
-    { id: 'placeStructural', label: 'Place Structural', action: () => handleToolSelect('structural'), icon: '➖' }
+    
   ];
 
   const elementButtons = [
     { id: 'wall', icon: '🧱', label: 'Wall', action: () => handleToolSelect('wall') },
     { id: 'room', icon: '🏠', label: 'Room', action: () => handleToolSelect('room') },
-    { id: 'surface', icon: '⬜', label: 'Surface', action: () => handleToolSelect('surface') },
-    { id: 'door', icon: '🚪', label: 'Door', action: () => handleToolSelect('door') },
-    { id: 'window', icon: '🪟', label: 'Window', action: () => handleToolSelect('window') },
-    { id: 'beam', icon: '➖', label: 'Beam', action: () => handleToolSelect('beam') },
-    { id: 'column', icon: '⬛', label: 'Column', action: () => handleToolSelect('column') }
+    
   ];
 
   // ---------------------------

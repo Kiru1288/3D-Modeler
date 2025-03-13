@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useCallback} from "react";
 import Toolbar from "./Components/Toolbar";
 import DrawingBoard from "./Components/DrawingBoard";
 import "./styling/App.css";
@@ -30,24 +30,25 @@ function App() {
   // - When a file is selected, a FileReader converts it into a format the browser can display.
   // - The result is stored in the floorplan state.
   const handleUploadFloorplan = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*"; // Accept images; adjust if needed
-
-    input.onchange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setFloorplan(e.target.result);
-          console.log("Floorplan uploaded.");
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-
-    input.click();
+    const canvas = document.querySelector("canvas"); 
+    if (!canvas) {
+      console.error("Canvas not found!");
+      return;
+    }
+  
+    try {
+      const image = canvas.toDataURL("image/png"); 
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = "floorplan.png"; 
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading floor plan:", error);
+    }
   };
+  
 
   // 2. Handler for drawing a room
   // Purpose:

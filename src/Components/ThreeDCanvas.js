@@ -131,12 +131,17 @@ const Scene = ({ walls = [], is3DMode }) => {
       <SpotLight position={[150, 500, 150]} intensity={1.5} castShadow />
 
       <OrbitControls
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={is3DMode}
-        maxPolarAngle={is3DMode ? Math.PI / 2.2 : 0}
-        minPolarAngle={0}
-      />
+  enablePan={true} 
+  enableZoom={true} 
+  enableRotate={true} 
+  panSpeed={0.5}
+  minDistance={2}
+  maxDistance={50}
+  maxPolarAngle={Math.PI / 2}
+  screenSpacePanning={true} 
+  target={[0, 0, 0]} 
+/>
+
 
       {/* Full-Screen Floor */}
       <Plane args={[3000, 3000]} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
