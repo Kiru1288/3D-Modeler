@@ -126,20 +126,14 @@ const Scene = ({ walls = [], is3DMode }) => {
 
   return (
     <>
-      <PerspectiveCamera makeDefault {...cameraProps} />
+     <PerspectiveCamera makeDefault position={[0, 800, 800]} />
       <ambientLight intensity={1.0} />
       <SpotLight position={[150, 500, 150]} intensity={1.5} castShadow />
 
-      <OrbitControls
+      <OrbitControls 
   enablePan={true} 
   enableZoom={true} 
   enableRotate={true} 
-  panSpeed={0.5}
-  minDistance={2}
-  maxDistance={50}
-  maxPolarAngle={Math.PI / 2}
-  screenSpacePanning={true} 
-  target={[0, 0, 0]} 
 />
 
 
@@ -158,18 +152,17 @@ const Scene = ({ walls = [], is3DMode }) => {
 
 // Define the missing 'Controls' component
 const Controls = () => {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   useEffect(() => {
     camera.position.set(0, 800, 800);
     camera.lookAt(0, 0, 0);
   }, [camera]);
   return (
-    <OrbitControls
-      enableDamping
-      dampingFactor={0.05}
-      minDistance={2}
-      maxDistance={50}
-      maxPolarAngle={Math.PI / 2}
+    <OrbitControls 
+      args={[camera, gl.domElement]} 
+      enablePan={true} 
+      enableZoom={true} 
+      enableRotate={true} 
     />
   );
 };
