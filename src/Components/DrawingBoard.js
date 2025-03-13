@@ -41,28 +41,30 @@ function DrawingBoard() {
   const [history, setHistory] = useState([{ walls: [], structures: [] }]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  const Door = ({ position, rotation }) => {
-    const gltf = useLoader(GLTFLoader, "/models/door.glb"); 
-    return <primitive object={gltf.scene} position={position} rotation={rotation} />;
-  };
+  
   
 
   // ---------------------------
   // History Management
   // ---------------------------
   const addToHistory = useCallback(() => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({
-      walls: [...walls],
-      structures: [...structures],
+    setHistory((prevHistory) => {
+      if (prevHistory.length > 0) {
+        const lastState = prevHistory[prevHistory.length - 1];
+        if (
+          JSON.stringify(lastState.walls) === JSON.stringify(walls) &&
+          JSON.stringify(lastState.structures) === JSON.stringify(structures)
+        ) {
+          return prevHistory; 
+        }
+      }
+      return [...prevHistory, { walls: [...walls], structures: [...structures] }];
     });
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex, walls, structures]);
-
-  const toggleView = useCallback(() => {
-    setIs3DMode((prev) => !prev);
-  }, []);
+  }, [walls, structures]); 
+  
+    
+  
+  
 
 
 
@@ -76,11 +78,11 @@ function DrawingBoard() {
     const handleResize = () => {
       setCanvasSize({
         width: window.innerWidth - SIDEBAR_WIDTH,
-        height: window.innerHeight
+        height: window.innerHeight,
       });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // ---------------------------
@@ -88,27 +90,22 @@ function DrawingBoard() {
 // ---------------------------
 const handleUndo = useCallback(() => {
   if (historyIndex > 0) {
-    const prevState = history[historyIndex - 1]; 
-    if (prevState) {
-      addWall(prevState.walls);
-      addStructure(prevState.structures);
-    }
-    setHistoryIndex(historyIndex - 1);
+    const prevState = history[historyIndex - 1];
+    addWall(prevState.walls);
+    addStructure(prevState.structures);
+    setHistoryIndex((prevIndex) => prevIndex - 1);
   }
 }, [history, historyIndex, addWall, addStructure]);
 
 
 const handleRedo = useCallback(() => {
   if (historyIndex < history.length - 1) {
-    const nextState = history[historyIndex + 1]; 
-    if (nextState) {
-      addWall(nextState.walls);
-      addStructure(nextState.structures);
-    }
-    setHistoryIndex(historyIndex + 1);
+    const nextState = history[historyIndex + 1];
+    addWall(nextState.walls);
+    addStructure(nextState.structures);
+    setHistoryIndex((prevIndex) => prevIndex + 1);
   }
 }, [history, historyIndex, addWall, addStructure]);
-
 // ---------------------------
 // Keyboard event for undo/redo
 // ---------------------------
@@ -124,31 +121,34 @@ useEffect(() => {
       }
     }
   };
+
   window.addEventListener("keydown", handleKeyboard);
   return () => window.removeEventListener("keydown", handleKeyboard);
-}, [handleRedo, handleUndo]);
+}, [handleRedo, handleUndo]); 
 
 
   // Record history whenever walls or structures change
   useEffect(() => {
-    addToHistory();
-  }, [walls, structures, addToHistory]);
+    if (historyIndex === 0 || JSON.stringify(history[historyIndex]) !== JSON.stringify({ walls, structures })) {
+      addToHistory();
+    }
+  }, [walls, structures]);
+  
 
   // ---------------------------
   // File Upload Handler
   // ---------------------------
   const handleUpload = useCallback(() => {
-    const canvas = document.querySelector("canvas"); 
+    const canvas = document.querySelector("canvas");
     if (!canvas) {
       console.error("Canvas not found!");
       return;
     }
-  
     try {
-      const image = canvas.toDataURL("image/png"); 
+      const image = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = image;
-      link.download = "floorplan.png"; 
+      link.download = "floorplan.png";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -166,14 +166,15 @@ useEffect(() => {
   // ---------------------------
   // Handle tool selection with confirmation for unfinished room drawing
   const handleToolSelect = useCallback((toolType) => {
-    console.log('Tool selected:', toolType);
     setCurrentTool(toolType);
-    // Reset drawing states
     setIsDrawing(false);
     setCurrentLine(null);
-    setCurrentStructure(null);
   }, []);
 
+
+  const toggleView = useCallback(() => {
+    setIs3DMode((prevMode) => !prevMode);
+  }, []);
   // ---------------------------
   // Toolbar and Element Buttons
   // ---------------------------
@@ -197,49 +198,47 @@ useEffect(() => {
   const handleDrawStart = useCallback((e) => {
     const pos = e.target.getStage().getPointerPosition();
     if (!pos) return;
-    console.log('Draw start position:', pos);
-    const snappedPos = snapEnabled
-      ? {
-          x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
-          y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING
-        }
-      : pos;
 
-    if (currentTool === 'wall') {
+    const snappedPos = {
+      x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
+      y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING,
+    };
+
+    if (currentTool === "wall") {
       setIsDrawing(true);
-      setCurrentLine({
-        x1: snappedPos.x,
-        y1: snappedPos.y,
-        x2: snappedPos.x,
-        y2: snappedPos.y
-      });
+      setCurrentLine({ x1: snappedPos.x, y1: snappedPos.y, x2: snappedPos.x, y2: snappedPos.y });
     }
-  }, [currentTool, snapEnabled]);
+  }, [currentTool]);
 
   const handleDrawMove = useCallback((e) => {
-    if (!isDrawing) return;
+    if (!isDrawing || !currentLine) return;
+
     const pos = e.target.getStage().getPointerPosition();
     if (!pos) return;
-    console.log('Draw move position:', pos);
-    const snappedPos = snapEnabled
-      ? {
-          x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
-          y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING
-        }
-      : pos;
-    setCurrentLine(prev => prev ? { ...prev, x2: snappedPos.x, y2: snappedPos.y } : null);
-  }, [isDrawing, snapEnabled]);
+
+    const snappedPos = {
+        x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
+        y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING,
+    };
+    setCurrentLine((prev) => prev ? { ...prev, x2: snappedPos.x, y2: snappedPos.y } : null);
+
+
+    
+}, [isDrawing, currentLine]);
+
+  
+  
+
+    
+  
 
   const handleDrawEnd = useCallback(() => {
-    if (!isDrawing) return;
-    console.log('Draw end with line:', currentLine);
-    if (currentTool === 'wall' && currentLine) {
+    if (isDrawing && currentTool === "wall" && currentLine) {
       addWall(currentLine);
     }
     setIsDrawing(false);
     setCurrentLine(null);
-  }, [isDrawing, currentLine, currentTool, addWall]);
-
+  }, [isDrawing, currentTool, currentLine, addWall]);
   const handleDoubleClick = useCallback(() => {
     if (currentTool === 'room' && currentStructure && currentStructure.points.length >= 4) {
       if (currentStructure) {
