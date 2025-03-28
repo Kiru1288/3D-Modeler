@@ -10,6 +10,15 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 import Door from "./Doors/Door";
+import CameraPathPreview from "./CameraPathPreview";
+import { Sky } from '@react-three/drei';
+import { useLoader } from "@react-three/fiber";
+import { TextureLoader } from "three";
+import brickColor from "../Assets/brick_4_diff_4k.jpg";
+import brickNormal from "../Assets/brick_4_nor_dx_4k.jpg";
+import brickRoughness from "../Assets/brick_4_rough_4k.jpg";
+import brickAO from "../Assets/brick_4_ao_4k.jpg";
+
 
 // -----------------------
 // Materials
@@ -43,22 +52,24 @@ const MATERIALS = {
 // Wall Component
 // -----------------------
 const Wall = ({ x1, y1, x2, y2, height = 30, thickness = 2 }) => {
-  useEffect(() => {
-    if (
-      typeof x1 !== "number" || typeof y1 !== "number" ||
-      typeof x2 !== "number" || typeof y2 !== "number"
-    ) {
-      console.warn("❌ Invalid wall coordinates:", { x1, y1, x2, y2 });
-      return;
-    }
-    console.log("✅ Final Walls Before Rendering:", { x1, y1, x2, y2 });
-  }, [x1, y1, x2, y2]);
-  
-
+  const [colorMap, normalMap, roughnessMap, aoMap] = useLoader(TextureLoader, [
+    brickColor,
+    brickNormal,
+    brickRoughness,
+    brickAO
+  ]);
   const length = Math.hypot(x2 - x1, y2 - y1);
   const angle = Math.atan2(y2 - y1, x2 - x1);
-  console.log(`🧱 Rendering Wall: (${x1}, ${y1}) -> (${x2}, ${y2}), Length: ${length}, Angle: ${angle}`);
 
+  useEffect(() => {
+    [colorMap, normalMap, roughnessMap, aoMap].forEach((map) => {
+      map.wrapS = map.wrapT = THREE.RepeatWrapping;
+      map.repeat.set(length / 10, height / 10); 
+    });
+  }, [colorMap, normalMap, roughnessMap, aoMap, length, height]);
+  
+
+  
   return (
     <mesh
       position={[(x1 + x2) / 2, height / 2, -(y1 + y2) / 2]}
@@ -67,11 +78,15 @@ const Wall = ({ x1, y1, x2, y2, height = 30, thickness = 2 }) => {
       receiveShadow
     >
       <boxGeometry args={[length, height, thickness]} />
-      <meshStandardMaterial color="gray" />
+      <meshStandardMaterial
+        map={colorMap}
+        normalMap={normalMap}
+        roughnessMap={roughnessMap}
+        aoMap={aoMap}
+      />
     </mesh>
   );
 };
-
 
 
 // -----------------------
@@ -131,22 +146,28 @@ const Scene = ({ walls = [], is3DMode }) => {
       <SpotLight position={[150, 500, 150]} intensity={1.5} castShadow />
 
       <OrbitControls
-  enablePan={true} 
-  enableZoom={true} 
-  enableRotate={true} 
+  enableDamping
+  dampingFactor={0.05}
+  rotateSpeed={0.6}
+  zoomSpeed={0.8}
   panSpeed={0.5}
-  minDistance={2}
-  maxDistance={50}
+  minDistance={10}
+  maxDistance={800}
   maxPolarAngle={Math.PI / 2}
-  screenSpacePanning={true} 
-  target={[0, 0, 0]} 
+  screenSpacePanning={true}
+  target={[0, 0, 0]}
+  enableRotate={true}
 />
+
+
+
 
 
       {/* Full-Screen Floor */}
       <Plane args={[3000, 3000]} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <meshStandardMaterial color="#eaeaea" />
-      </Plane>
+  <meshStandardMaterial color="#7cfc00" /> {/* Lawn green */}
+</Plane>
+
 
       {/* Render Walls (Ensure Valid x1, y1, x2, y2) */}
       {walls.map((wall, i) => (
@@ -156,23 +177,68 @@ const Scene = ({ walls = [], is3DMode }) => {
   );
 };
 
-// Define the missing 'Controls' component
-const Controls = () => {
-  const { camera } = useThree();
+
+const Controls = ({ controlsRef }) => {
+  const { camera, gl } = useThree();
+
   useEffect(() => {
-    camera.position.set(0, 800, 800);
-    camera.lookAt(0, 0, 0);
-  }, [camera]);
+    const domElement = gl.domElement;
+    const controls = controlsRef.current;
+
+    const handlePointerDown = (e) => {
+      if (e.button === 2) {
+        controls.enableRotate = false;
+      }
+    };
+
+    const handlePointerUp = (e) => {
+      if (e.button === 2) {
+        controls.enableRotate = true;
+      }
+    };
+
+    domElement.addEventListener("pointerdown", handlePointerDown);
+    domElement.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      domElement.removeEventListener("pointerdown", handlePointerDown);
+      domElement.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [gl]);
+
   return (
     <OrbitControls
+      ref={controlsRef}
+      args={[camera, gl.domElement]}
       enableDamping
       dampingFactor={0.05}
-      minDistance={2}
-      maxDistance={50}
-      maxPolarAngle={Math.PI / 2}
+      panSpeed={1.5}
+      screenSpacePanning={true}
+      rotateSpeed={0.8}
+      enableRotate={true}
+      mouseButtons={{
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN,
+      }}
+      touches={{
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN,
+      }}
+      target={[0, 0, 0]}
     />
   );
 };
+
+
+
+
+
+
+
+
+
+
 
 // Define the missing 'Measurements' component
 const Measurements = ({ walls }) => {
@@ -201,55 +267,278 @@ const Measurements = ({ walls }) => {
 // Main ThreeDCanvas Component
 // -----------------------
 const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => {
-  const cameraRef = React.useRef();
+  const canvasRef = React.useRef(null);
+  
+  const controlsRef = React.useRef();     
 
-  const changeCameraAngle = () => {
-    if (cameraRef.current) {
-      cameraRef.current.position.set(0, 500, 500);
-      cameraRef.current.lookAt(0, 0, 0);
+  const holdIntervalRef = React.useRef(null);
+
+const startMoving = (direction) => {
+  if (canvasRef.current?.moveCamera) {
+    canvasRef.current.moveCamera(direction);
+    holdIntervalRef.current = setInterval(() => {
+      canvasRef.current.moveCamera(direction);
+    }, 100);
+  }
+};
+
+const getSceneOffset = (walls) => {
+  if (!walls.length) return { x: 0, y: 0 };
+
+  let sumX = 0, sumY = 0;
+  walls.forEach(wall => {
+    sumX += wall.x1 + wall.x2;
+    sumY += wall.y1 + wall.y2;
+  });
+
+  const avgX = sumX / (2 * walls.length);
+  const avgY = sumY / (2 * walls.length);
+
+  return { x: avgX, y: avgY };
+};
+
+
+const calculateCenter = (objects) => {
+  if (!objects.length) return new THREE.Vector3(0, 0, 0);
+
+  let sumX = 0, sumZ = 0;
+  objects.forEach(obj => {
+    sumX += (obj.x1 + obj.x2) / 2;
+    sumZ += (obj.y1 + obj.y2) / 2;
+  });
+
+  const avgX = sumX / objects.length;
+  const avgZ = sumZ / objects.length;
+
+  return new THREE.Vector3(avgX, 0, -avgZ); 
+};
+
+
+const stopMoving = () => {
+  clearInterval(holdIntervalRef.current);
+};
+
+  
+
+const CameraControls = ({ controlsRef, walls }) => {
+  const { camera } = useThree();
+  const controls = controlsRef.current;
+
+  const moveCamera = (direction) => {
+    const step = 20;
+    const newPos = camera.position.clone();
+
+    switch (direction) {
+      case "up":
+        newPos.z -= step;
+        break;
+      case "down":
+        newPos.z += step;
+        break;
+      case "left":
+        newPos.x -= step;
+        break;
+      case "right":
+        newPos.x += step;
+        break;
+      case "reset": {
+        const center = calculateCenter(walls);
+        newPos.set(center.x, 300, center.z);
+        camera.position.copy(newPos);
+        camera.lookAt(center);
+        if (controls) {
+          controls.target.set(center.x, 0, center.z);
+          controls.update();
+        }
+        return;
+      }
+      default:
+        return;
+    }
+
+    camera.position.copy(newPos);
+    camera.lookAt(0, 0, 0);
+    if (controls) {
+      controls.target.set(0, 0, 0);
+      controls.update();
     }
   };
 
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.moveCamera = moveCamera;
+    }
+  }, [camera]);
+
+  return null;
+};
+
+  
+  
+  
+    
+
+  
+
+  const walkThroughPath = [
+    [0, 10, 200],
+    [50, 10, 150],
+    [100, 10, 100],
+    [150, 10, 50],
+    [200, 10, 0],
+  ];
+  
+  const [previewMode, setPreviewMode] = React.useState(false);
+  
+
+  const changeCameraAngle = () => {
+    if (!canvasRef.current?.moveCamera) return;
+    canvasRef.current.moveCamera("reset");
+  };
+  
+  
+  
+    
+    
+  
+  
+  
+  
+  const btnStyle = {
+    width: "50px",
+    height: "50px",
+    fontSize: "24px",
+    borderRadius: "10px",
+    border: "1px solid #999",
+    backgroundColor: "#f4f4f4",
+    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+    cursor: "pointer",
+  };
+  
+  
+
   return (
     <>
-      <button onClick={changeCameraAngle} style={{ position: 'absolute', top: 10, right: 10 }}>Change Angle</button>
-      <Canvas shadows gl={{ antialias: true }}>
-        <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 800, 800]} />
-        <Controls />
-        <Lighting />
-        <Scene walls={walls} is3DMode={is3DMode} />
-        {/* Grid */}
-        <Grid
-          args={[100, 100]}
-          position={[0, 0, 0]}
-          cellSize={1}
-          cellThickness={0.5}
-          cellColor="#8f8f8f"
-          sectionSize={5}
-          sectionThickness={1}
-          sectionColor="#bfbfbf"
-          fadeDistance={50}
-          fadeStrength={1}
-        />
-        {Array.isArray(walls) && walls.length > 0 &&
-          walls.map((wall, i) => <Wall key={i} {...wall} />)}
-        {/* Render Structures (windows, doors, etc.) */}
-        {structures.length > 0 &&
-          structures.map((structure, i) => {
-            switch (structure.type) {
-              case "window":
-                return <Window key={i} {...structure} />;
-              case "door":
-                return <Door key={i} {...structure} />;
-              default:
-                return null;
-            }
-          })}
-        {/* Render Measurements */}
-        <Measurements walls={walls} />
-        {/* New Scene Component */}
-        <Scene walls={moves} is3DMode={is3DMode} />
-      </Canvas>
+      <button
+    onClick={() => setPreviewMode(true)}
+    style={{ position: 'absolute', top: 50, right: 10, zIndex: 10 }}
+    >
+    ▶️ Start Walkthrough
+      </button>
+      
+     
+
+      <div style={{
+  position: "absolute",
+  bottom: 40,
+  left: 40,
+  zIndex: 100,
+  display: "grid",
+  gridTemplateColumns: "60px 60px 60px",
+  gridTemplateRows: "60px 60px 60px",
+  gap: "5px",
+  justifyItems: "center",
+  alignItems: "center"
+}}>
+  <div></div>
+  <button
+    style={btnStyle}
+    onMouseDown={() => startMoving("up")}
+    onMouseUp={stopMoving}
+    onMouseLeave={stopMoving}
+  >⬆️</button>
+  <div></div>
+
+  <button
+    style={btnStyle}
+    onMouseDown={() => startMoving("left")}
+    onMouseUp={stopMoving}
+    onMouseLeave={stopMoving}
+  >⬅️</button>
+
+  <button
+    style={btnStyle}
+    onMouseDown={() => startMoving("reset")}
+    onMouseUp={stopMoving}
+    onMouseLeave={stopMoving}
+  >⏺️</button>
+
+  <button
+    style={btnStyle}
+    onMouseDown={() => startMoving("right")}
+    onMouseUp={stopMoving}
+    onMouseLeave={stopMoving}
+  >➡️</button>
+
+  <div></div>
+  <button
+    style={btnStyle}
+    onMouseDown={() => startMoving("down")}
+    onMouseUp={stopMoving}
+    onMouseLeave={stopMoving}
+  >⬇️</button>
+  <div></div>
+</div>
+
+
+
+
+      
+      
+
+
+
+<Canvas shadows 
+gl={{ antialias: true }} 
+ref={canvasRef}
+style={{ background: "#ccefff" }}
+>
+<Sky sunPosition={[100, 20, 100]} />
+
+  <Controls controlsRef={controlsRef} />
+  <CameraControls controlsRef={controlsRef} walls={walls} />
+
+  <Lighting />
+  <Scene walls={walls} is3DMode={is3DMode} />
+  <Grid
+    args={[100, 100]}
+    position={[0, 0, 0]}
+    cellSize={1}
+    cellThickness={0.5}
+    cellColor="#8f8f8f"
+    sectionSize={5}
+    sectionThickness={1}
+    sectionColor="#bfbfbf"
+    fadeDistance={50}
+    fadeStrength={1}
+  />
+  {walls.map((wall, i) => (
+    <Wall key={i} {...wall} />
+  ))}
+  {structures.map((structure, i) => {
+    switch (structure.type) {
+      case "window":
+        return <Window key={i} {...structure} />;
+      case "door":
+        return <Door key={i} {...structure} />;
+      default:
+        return null;
+    }
+  })}
+  <Measurements walls={walls} />
+  <Scene walls={moves} is3DMode={is3DMode} />
+  <CameraPathPreview
+    pathPoints={walkThroughPath}
+    enabled={previewMode}
+    speed={0.002}
+    onEnd={() => {
+      console.log("🎉 Walkthrough Complete");
+      setPreviewMode(false);
+    }}
+  />
+</Canvas>
+
+      
     </>
   );
 };
