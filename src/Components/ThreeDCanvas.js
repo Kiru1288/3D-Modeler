@@ -428,57 +428,7 @@ const CameraControls = ({ controlsRef, walls }) => {
       
      
 
-      <div style={{
-  position: "absolute",
-  bottom: 40,
-  left: 40,
-  zIndex: 100,
-  display: "grid",
-  gridTemplateColumns: "60px 60px 60px",
-  gridTemplateRows: "60px 60px 60px",
-  gap: "5px",
-  justifyItems: "center",
-  alignItems: "center"
-}}>
-  <div></div>
-  <button
-    style={btnStyle}
-    onMouseDown={() => startMoving("up")}
-    onMouseUp={stopMoving}
-    onMouseLeave={stopMoving}
-  >⬆️</button>
-  <div></div>
-
-  <button
-    style={btnStyle}
-    onMouseDown={() => startMoving("left")}
-    onMouseUp={stopMoving}
-    onMouseLeave={stopMoving}
-  >⬅️</button>
-
-  <button
-    style={btnStyle}
-    onMouseDown={() => startMoving("reset")}
-    onMouseUp={stopMoving}
-    onMouseLeave={stopMoving}
-  >⏺️</button>
-
-  <button
-    style={btnStyle}
-    onMouseDown={() => startMoving("right")}
-    onMouseUp={stopMoving}
-    onMouseLeave={stopMoving}
-  >➡️</button>
-
-  <div></div>
-  <button
-    style={btnStyle}
-    onMouseDown={() => startMoving("down")}
-    onMouseUp={stopMoving}
-    onMouseLeave={stopMoving}
-  >⬇️</button>
-  <div></div>
-</div>
+      
 
 
 
