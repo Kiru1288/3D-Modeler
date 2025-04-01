@@ -1,37 +1,40 @@
+import { useFrame, useThree } from '@react-three/fiber';
+import { useRef, useEffect } from 'react';
+import * as THREE from 'three';
 
-
-import React, { useRef, useEffect } from "react";
-import { useThree, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-
-const CameraPathPreview = ({ pathPoints = [], enabled = false, speed = 0.001, onEnd }) => {
+const CameraPathPreview = ({ pathPoints, enabled, speed = 0.01, onEnd }) => {
   const { camera } = useThree();
-  const curve = useRef(null);
-  const progress = useRef(0);
-
-  useEffect(() => {
-    curve.current = new THREE.CatmullRomCurve3(
-      pathPoints.map((p) => new THREE.Vector3(...p))
-    );
-    if (enabled) {
-      progress.current = 0;
-    }
-  }, [pathPoints, enabled]);
+  const indexRef = useRef(0);
+  const progressRef = useRef(0);
 
   useFrame(() => {
-    if (!enabled || !curve.current) return;
+    if (!enabled || pathPoints.length < 2) return;
 
-    progress.current += speed;
-    if (progress.current >= 1) {
-      progress.current = 1;
-      onEnd && onEnd();
+    const i = Math.floor(indexRef.current);
+    const nextIndex = i + 1;
+
+    if (nextIndex >= pathPoints.length) {
+      onEnd?.();
+      return;
     }
 
-    const point = curve.current.getPointAt(progress.current);
-    const lookAtPoint = curve.current.getPointAt(Math.min(progress.current + 0.01, 1));
+    const start = new THREE.Vector3(...pathPoints[i]);
+    const end = new THREE.Vector3(...pathPoints[nextIndex]);
+    const direction = end.clone().sub(start);
+    const distance = direction.length();
+    direction.normalize();
 
-    camera.position.set(point.x, point.y, point.z);
-    camera.lookAt(lookAtPoint);
+    progressRef.current += speed;
+    if (progressRef.current >= distance) {
+      indexRef.current += 1;
+      progressRef.current = 0;
+    }
+
+    const move = direction.clone().multiplyScalar(progressRef.current);
+    const newPos = start.clone().add(move);
+
+    camera.position.copy(newPos);
+    camera.lookAt(end);
   });
 
   return null;

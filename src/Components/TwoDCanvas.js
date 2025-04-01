@@ -1,11 +1,11 @@
 import React, { useRef, useState, forwardRef } from "react";
-import { Stage, Layer, Line } from "react-konva";
+import { Stage, Layer, Line, Text } from "react-konva";
 
 const GRID_SIZE = 20;
 const snapToGrid = (value, enabled) =>
   enabled ? Math.round(value / GRID_SIZE) * GRID_SIZE : value;
 
-const TwoDCanvas = forwardRef(({ width, height, onDraw, onSwitchMode }, ref) => {
+const TwoDCanvas = forwardRef(({ width, height, onDraw, onSwitchMode, unit = "Meters" }, ref) => {
   const [walls, setWalls] = useState([]);
   const [newWall, setNewWall] = useState(null);
   const [gridVisible, setGridVisible] = useState(true);
@@ -22,6 +22,15 @@ const TwoDCanvas = forwardRef(({ width, height, onDraw, onSwitchMode }, ref) => 
     } else if (ref) {
       ref.current = node;
     }
+  };
+
+  const getWallLength = (wall) => {
+    if (!wall) return 0;
+    const dx = wall.x2 - wall.x1;
+    const dy = wall.y2 - wall.y1;
+    const pixels = Math.sqrt(dx * dx + dy * dy);
+    const meters = pixels / 100;
+    return unit === "Feet" ? meters * 3.28084 : meters;
   };
 
   const saveToHistory = (newWalls) => {
@@ -177,21 +186,38 @@ const TwoDCanvas = forwardRef(({ width, height, onDraw, onSwitchMode }, ref) => 
             <Line
               key={i}
               points={[wall.x1, wall.y1, wall.x2, wall.y2]}
-              stroke={colorMap.wall}  // using colorMap for wall color
+              stroke={colorMap.wall}  
               strokeWidth={4}
               shadowBlur={5}
               shadowColor="rgba(0, 0, 0, 0.3)"
             />
           ))}
-          {newWall && (
-            <Line
-              points={[newWall.x1, newWall.y1, newWall.x2, newWall.y2]}
-              stroke="gray"
-              strokeWidth={2}
-              dash={[10, 5]}
-            />
-          )}
-        </Layer>
+           {newWall && (() => {
+  const midX = (newWall.x1 + newWall.x2) / 2;
+  const midY = (newWall.y1 + newWall.y2) / 2 - 20;
+  const clampedMidY = Math.max(10, midY);
+  const textValue = `${getWallLength(newWall).toFixed(2)} ${unit}`;
+  const textWidth = textValue.length * 8;
+
+  return (
+    <Text
+      x={midX - textWidth / 2}
+      y={clampedMidY}
+      text={textValue}
+      fontSize={14}
+      fill="white"
+      stroke="black"
+      strokeWidth={1}
+      shadowColor="black"
+      shadowBlur={2}
+      shadowOffset={{ x: 1, y: 1 }}
+      shadowOpacity={0.4}
+    />
+  );
+})()}
+
+          </Layer>
+  
       </Stage>
     </div>
   );

@@ -18,6 +18,8 @@ import brickColor from "../Assets/brick_4_diff_4k.jpg";
 import brickNormal from "../Assets/brick_4_nor_dx_4k.jpg";
 import brickRoughness from "../Assets/brick_4_rough_4k.jpg";
 import brickAO from "../Assets/brick_4_ao_4k.jpg";
+import doorImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Door-Flat.512.png';
+import windowImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Window-Flat.512.png';
 
 
 // -----------------------
@@ -93,7 +95,15 @@ const Wall = ({ x1, y1, x2, y2, height = 30, thickness = 2 }) => {
 // Window Component
 // -----------------------
 const Window = ({ position, size, rotation }) => {
+  if (!size || typeof size.width !== "number" || typeof size.height !== "number") {
+    console.warn("❌ Invalid size object passed to <Window />", size);
+    return null;
+  }
+
   const frameThickness = 0.05;
+
+  
+  
   return (
     <group position={position} rotation={rotation}>
       {/* Window Frame */}
@@ -318,6 +328,51 @@ const stopMoving = () => {
   clearInterval(holdIntervalRef.current);
 };
 
+
+const generateWalkthroughPath = (walls = [], structures = []) => {
+  if (!walls.length) return [];
+
+  
+  const referenceWall = walls[0];
+  const startX = (referenceWall.x1 + referenceWall.x2) / 2;
+  const startZ = (referenceWall.y1 + referenceWall.y2) / 2;
+
+ 
+  const dx = referenceWall.x2 - referenceWall.x1;
+  const dz = referenceWall.y2 - referenceWall.y1;
+  const wallLength = Math.hypot(dx, dz);
+  const inwardNormal = [-dz / wallLength, dx / wallLength]; 
+
+  const entryX = startX + inwardNormal[0] * 50;
+  const entryZ = startZ + inwardNormal[1] * 50;
+
+ 
+  const xs = walls.flatMap(w => [w.x1, w.x2]);
+  const zs = walls.flatMap(w => [w.y1, w.y2]);
+
+  const minX = Math.min(...xs) + 50;
+  const maxX = Math.max(...xs) - 50;
+  const minZ = Math.min(...zs) + 50;
+  const maxZ = Math.max(...zs) - 50;
+
+  
+  const path = [[entryX, 10, -entryZ]];
+  const spacing = 100;
+  let forward = true;
+
+  for (let z = minZ; z <= maxZ; z += spacing) {
+    const row = [];
+    for (let x = minX; x <= maxX; x += spacing) {
+      row.push([x, 10, -z]); 
+    }
+    path.push(...(forward ? row : row.reverse()));
+    forward = !forward;
+  }
+
+  return path;
+};
+
+
   
 
 const CameraControls = ({ controlsRef, walls }) => {
@@ -380,15 +435,28 @@ const CameraControls = ({ controlsRef, walls }) => {
 
   
 
-  const walkThroughPath = [
-    [0, 10, 200],
-    [50, 10, 150],
-    [100, 10, 100],
-    [150, 10, 50],
-    [200, 10, 0],
-  ];
+const [walkThroughPath, setWalkThroughPath] = React.useState([]);
+
+useEffect(() => {
+  const newPath = generateWalkthroughPath(walls, structures);
+  setWalkThroughPath((prevPath) => {
+    const prevStr = JSON.stringify(prevPath);
+    const newStr = JSON.stringify(newPath);
+    return prevStr !== newStr ? newPath : prevPath;
+  });
+}, [walls, structures]);
+
+
   
   const [previewMode, setPreviewMode] = React.useState(false);
+
+  <button
+  onClick={() => setPreviewMode(prev => !prev)}
+  style={{ position: 'absolute', top: 50, right: 10, zIndex: 10 }}
+>
+  {previewMode ? "⏹️ Stop Walkthrough" : "▶️ Start Walkthrough"}
+</button>
+
   
 
   const changeCameraAngle = () => {
@@ -466,26 +534,30 @@ style={{ background: "#ccefff" }}
     <Wall key={i} {...wall} />
   ))}
   {structures.map((structure, i) => {
-    switch (structure.type) {
-      case "window":
-        return <Window key={i} {...structure} />;
-      case "door":
-        return <Door key={i} {...structure} />;
-      default:
-        return null;
-    }
-  })}
+  if (!structure || !structure.type) return null;
+
+  switch (structure.type) {
+    case "window":
+      return <Window key={i} {...structure} />;
+    case "door":
+      return <Door key={i} {...structure} />;
+    default:
+      return null;
+  }
+})}
+
+
+
   <Measurements walls={walls} />
   <Scene walls={moves} is3DMode={is3DMode} />
   <CameraPathPreview
-    pathPoints={walkThroughPath}
-    enabled={previewMode}
-    speed={0.002}
-    onEnd={() => {
-      console.log("🎉 Walkthrough Complete");
-      setPreviewMode(false);
-    }}
-  />
+  pathPoints={walkThroughPath}
+  enabled={previewMode}
+  speed={0.5}
+  onEnd={() => setPreviewMode(false)}
+/>
+
+
 </Canvas>
 
       

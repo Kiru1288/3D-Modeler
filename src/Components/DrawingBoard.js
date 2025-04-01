@@ -4,7 +4,7 @@ import React, {
   useCallback,
   useContext
 } from 'react';
-import { Stage, Layer, Line } from "react-konva";
+import { Stage, Layer, Line, Text } from "react-konva";
 import ThreeDCanvas from "./ThreeDCanvas";
 import "./DrawingBoard.css";
 import { FloorPlanContext } from '../context/FloorPlanContext';
@@ -166,10 +166,12 @@ useEffect(() => {
   // ---------------------------
   // Handle tool selection with confirmation for unfinished room drawing
   const handleToolSelect = useCallback((toolType) => {
+    console.log("Tool selected:", toolType); // ← add this
     setCurrentTool(toolType);
     setIsDrawing(false);
     setCurrentLine(null);
   }, []);
+  
 
 
   const toggleView = useCallback(() => {
@@ -189,8 +191,11 @@ useEffect(() => {
   const elementButtons = [
     { id: 'wall', icon: '🧱', label: 'Wall', action: () => handleToolSelect('wall') },
     { id: 'room', icon: '🏠', label: 'Room', action: () => handleToolSelect('room') },
-    
+    { id: 'door', icon: '🚪', label: 'Door', action: () => handleToolSelect('door') },
+    { id: 'window', icon: '🪟', label: 'Window', action: () => handleToolSelect('window') },
   ];
+  
+  
 
   // ---------------------------
   // Mouse Event Handlers
@@ -198,17 +203,66 @@ useEffect(() => {
   const handleDrawStart = useCallback((e) => {
     const pos = e.target.getStage().getPointerPosition();
     if (!pos) return;
-
+    console.log("Mouse down at:", pos);
+  
     const snappedPos = {
       x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
       y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING,
     };
-
-    if (currentTool === "wall") {
+  
+    if (["wall", "door", "window"].includes(currentTool)) {
       setIsDrawing(true);
-      setCurrentLine({ x1: snappedPos.x, y1: snappedPos.y, x2: snappedPos.x, y2: snappedPos.y });
+      setCurrentLine({
+        x1: snappedPos.x,
+        y1: snappedPos.y,
+        x2: snappedPos.x,
+        y2: snappedPos.y,
+      });
+      console.log(`Started drawing ${currentTool}`);
+    }
+  
+    if (currentTool === "room") {
+      
+      console.log("Room drawing not implemented yet");
     }
   }, [currentTool]);
+  
+
+  const handleDrawEnd = useCallback(() => {
+    if (isDrawing && currentLine) {
+      const element = {
+        id: Date.now(),
+        ...currentLine,
+        type: currentTool,
+      };
+  
+      if (["door", "window"].includes(currentTool)) {
+        
+  
+        const width = Math.abs(currentLine.x2 - currentLine.x1);
+const height = Math.abs(currentLine.y2 - currentLine.y1);
+const x = Math.min(currentLine.x1, currentLine.x2);
+const y = Math.min(currentLine.y1, currentLine.y2);
+
+addStructure({
+  id: Date.now(),
+  x,
+  y,
+  width,
+  height,
+  type: currentTool
+});
+
+      } else if (currentTool === "wall") {
+        addWall(element);
+      }
+  
+      setIsDrawing(false);
+      setCurrentLine(null);
+    }
+  }, [isDrawing, currentTool, currentLine, addWall, addStructure]);
+  
+  
 
   const handleDrawMove = useCallback((e) => {
     if (!isDrawing || !currentLine) return;
@@ -226,19 +280,24 @@ useEffect(() => {
     
 }, [isDrawing, currentLine]);
 
+const getWallLength = (wall) => {
+  if (!wall) return 0;
+  const dx = wall.x2 - wall.x1;
+  const dy = wall.y2 - wall.y1;
+  const pixels = Math.sqrt(dx * dx + dy * dy);
+  const meters = pixels / 100;
+  return unit === "Feet" ? meters * 3.28084 : meters;
+};
+
+
   
   
 
     
   
 
-  const handleDrawEnd = useCallback(() => {
-    if (isDrawing && currentTool === "wall" && currentLine) {
-      addWall(currentLine);
-    }
-    setIsDrawing(false);
-    setCurrentLine(null);
-  }, [isDrawing, currentTool, currentLine, addWall]);
+
+  
   const handleDoubleClick = useCallback(() => {
     if (currentTool === 'room' && currentStructure && currentStructure.points.length >= 4) {
       if (currentStructure) {
@@ -256,6 +315,7 @@ useEffect(() => {
   const renderGrid = useCallback(() => {
     const gridLines = [];
     const { width, height } = canvasSize;
+  
     for (let i = 0; i < width; i += GRID_SPACING) {
       gridLines.push(
         <Line
@@ -266,6 +326,7 @@ useEffect(() => {
         />
       );
     }
+  
     for (let i = 0; i < height; i += GRID_SPACING) {
       gridLines.push(
         <Line
@@ -276,13 +337,49 @@ useEffect(() => {
         />
       );
     }
+  
     return gridLines;
   }, [canvasSize, darkMode]);
-
+  
   // Render structure based on its type
   const renderStructure = useCallback((structure) => {
     if (!structure) return null;
     switch (structure.type) {
+     
+      case 'door':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#8B4513" // brown
+            strokeWidth={2}
+            closed
+          />
+        );
+      
+      case 'window':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#1E90FF" // blue
+            strokeWidth={2}
+            closed
+          />
+        );
+      
       case 'room':
         return (
           <Line
@@ -453,39 +550,102 @@ useEffect(() => {
         {is3DMode ? (
           <>
             <ThreeDCanvas
-              walls={walls.map(wall => ({
-                x1: wall.x1,
-                y1: wall.y1,
-                x2: wall.x2,
-                y2: wall.y2,
-                height: 30,  
-                thickness: 2 
-              }))}
-              is3DMode={is3DMode} 
-            />
+  walls={walls.map(wall => ({
+    x1: wall.x1,
+    y1: wall.y1,
+    x2: wall.x2,
+    y2: wall.y2,
+    height: 30,
+    thickness: 2,
+    color:
+      wall.type === 'door' ? '#8B4513' :
+      wall.type === 'window' ? '#FFD700' :
+      '#B22222',
+  }))}
+  structures={structures}
+  is3DMode={is3DMode}
+/>
+
           </>
         ) : (
           <Stage
-            width={canvasSize.width}
-            height={canvasSize.height}
-            className="drawing-stage"
-            onMouseDown={handleDrawStart}
-            onMouseMove={handleDrawMove}
-            onMouseUp={handleDrawEnd}
-            onDblClick={handleDoubleClick}
-          >
-            <Layer>
-              {showGrid && renderGrid()}
-              {walls.map((wall, i) => (
-                <Line
-                  key={`wall-${i}`}
-                  points={[wall.x1, wall.y1, wall.x2, wall.y2]}
-                  stroke={darkMode ? "#fff" : "#000"}
-                  strokeWidth={2}
-                />
-              ))}
-            </Layer>
-          </Stage>
+          width={canvasSize.width}
+          height={canvasSize.height}
+          className="drawing-stage"
+          onMouseDown={handleDrawStart}
+          onMouseMove={handleDrawMove}
+          onMouseUp={handleDrawEnd}
+          onDblClick={handleDoubleClick}
+        >
+          <Layer>
+            {showGrid && renderGrid()}
+        
+            {/* ✅ Existing finalized walls */}
+            {walls.map((wall, i) => {
+  const midY = ((wall.y1 + wall.y2) / 2) - 20; 
+  const midX = ((wall.x1 + wall.x2) / 2) + 15; 
+  const textValue = `${getWallLength(wall).toFixed(2)} ${unit}`;
+  const textWidth = textValue.length * 7;
+
+  return (
+    <React.Fragment key={`wall-label-${i}`}>
+      <Line
+        points={[wall.x1, wall.y1, wall.x2, wall.y2]}
+        stroke={darkMode ? "#fff" : "#000"}
+        strokeWidth={2}
+      />
+      <Text
+        x={midX - textWidth / 2}
+        y={Math.max(midY, 10)}
+        text={textValue}
+        fontSize={13}
+        fontFamily="Orbitron, sans-serif"
+        fill="#FFD700"
+        stroke="black"
+        strokeWidth={0.6}
+        shadowColor="black"
+        shadowBlur={2}
+        shadowOffset={{ x: 1, y: 1 }}
+        shadowOpacity={0.5}
+      />
+    </React.Fragment>
+    
+  );
+})}
+{structures.map((structure, i) => renderStructure(structure))}
+
+
+
+    {/* Live Drawing Preview with Length Label */}
+    {isDrawing && currentLine && (() => {
+      const midX = (currentLine.x1 + currentLine.x2) / 2;
+      const midY = (currentLine.y1 + currentLine.y2) / 2 - 10;
+      const textValue = `${getWallLength(currentLine).toFixed(2)} ${unit}`;
+      const textWidth = textValue.length * 7;
+
+      return (
+        <>
+          <Line
+            points={[currentLine.x1, currentLine.y1, currentLine.x2, currentLine.y2]}
+            stroke="gray"
+            strokeWidth={2}
+            dash={[10, 5]}
+          />
+          <Text
+            x={midX - textWidth / 2}
+            y={Math.max(midY, 10)}
+            text={textValue}
+            fontSize={14}
+            fill="gray"
+            stroke="black"
+            strokeWidth={0.5}
+          />
+        </>
+      );
+    })()}
+  </Layer>
+</Stage>
+
         )}
       </div>
     </div>

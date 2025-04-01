@@ -52,11 +52,17 @@ export function FloorPlanProvider({ children }) {
 
   // Add a new wall
   const addWall = (newWall) => {
-    setState(produce((draft) => {
+    const nextState = produce(state, (draft) => {
       draft.walls.push(newWall);
-    }));
-    saveStateToDB();
+    });
+  
+    setState(nextState);
+  
+    if (db) {
+      db.add('history', { walls: nextState.walls, structures: nextState.structures });
+    }
   };
+  
 
   // Remove a wall
   const removeWall = (wallId) => {
@@ -68,11 +74,18 @@ export function FloorPlanProvider({ children }) {
 
   // Add a new structure (door, window, etc.)
   const addStructure = (newStructure) => {
-    setState(produce((draft) => {
+    const nextState = produce(state, (draft) => {
       draft.structures.push(newStructure);
-    }));
-    saveStateToDB();
+    });
+  
+    setState(nextState);
+  
+    if (db) {
+      db.add('history', { walls: nextState.walls, structures: nextState.structures });
+    }
   };
+  
+  
 
   // Remove a structure
   const removeStructure = (structureId) => {
