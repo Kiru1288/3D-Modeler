@@ -1,5 +1,6 @@
-import React, { useEffect, memo } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import React, { useEffect, memo, useRef, useState } from "react";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
+
 import {
   OrbitControls,
   Grid,
@@ -10,7 +11,6 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 import Door from "./Doors/Door";
-import CameraPathPreview from "./CameraPathPreview";
 import { Sky } from '@react-three/drei';
 import { useLoader } from "@react-three/fiber";
 import { TextureLoader } from "three";
@@ -20,6 +20,8 @@ import brickRoughness from "../Assets/brick_4_rough_4k.jpg";
 import brickAO from "../Assets/brick_4_ao_4k.jpg";
 import doorImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Door-Flat.512.png';
 import windowImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Window-Flat.512.png';
+
+import { FloorPlanContext } from '../context/FloorPlanContext';
 
 
 // -----------------------
@@ -54,6 +56,7 @@ const MATERIALS = {
 // Wall Component
 // -----------------------
 const Wall = ({ x1, y1, x2, y2, height = 30, thickness = 2 }) => {
+  
   const [colorMap, normalMap, roughnessMap, aoMap] = useLoader(TextureLoader, [
     brickColor,
     brickNormal,
@@ -87,6 +90,35 @@ const Wall = ({ x1, y1, x2, y2, height = 30, thickness = 2 }) => {
         aoMap={aoMap}
       />
     </mesh>
+  );
+};
+
+const CameraFollower = ({ path }) => {
+  const ref = useRef();
+  const index = useRef(0);
+
+  useFrame(() => {
+    if (path.length === 0 || !ref.current) return;
+
+    // Move along the wall path
+    const current = path[index.current % path.length];
+    const next = path[(index.current + 1) % path.length];
+
+    const cam = ref.current;
+    cam.position.lerp({ x: current.x, y: 5, z: current.y }, 0.1);
+    cam.lookAt(next.x, 0, next.y);
+
+    // Move to next point once close enough
+    if (
+      Math.abs(cam.position.x - current.x) < 0.2 &&
+      Math.abs(cam.position.z - current.y) < 0.2
+    ) {
+      index.current = (index.current + 1) % path.length;
+    }
+  });
+
+  return (
+    <PerspectiveCamera ref={ref} makeDefault position={[0, 5, 0]} fov={75} />
   );
 };
 
@@ -273,10 +305,83 @@ const Measurements = ({ walls }) => {
     });
 };
 
+const CameraPathPreview = ({ pathPoints = [], enabled, speed = 0.5, onEnd }) => {
+  const ref = useRef();
+  const currentIndex = useRef(0);
+
+  useFrame(() => {
+    if (!enabled || pathPoints.length < 2 || !ref.current) return;
+
+    const current = pathPoints[currentIndex.current];
+    const next = pathPoints[(currentIndex.current + 1) % pathPoints.length];
+
+    const cam = ref.current;
+    cam.position.lerp(
+      new THREE.Vector3(current[0], current[1], current[2]),
+      speed * 0.1
+    );
+    cam.lookAt(next[0], next[1], next[2]);
+
+    const dist = cam.position.distanceTo(new THREE.Vector3(...current));
+    if (dist < 1) {
+      currentIndex.current += 1;
+      if (currentIndex.current >= pathPoints.length - 1) {
+        currentIndex.current = 0;
+        if (onEnd) onEnd();
+      }
+    }
+  });
+
+  return (
+    <PerspectiveCamera ref={ref} makeDefault position={[0, 5, 0]} fov={75} />
+  );
+};
+
+
+const snapWalls = (walls, threshold = 5) => {
+  const snapped = [...walls];
+
+  for (let i = 0; i < snapped.length; i++) {
+    for (let j = 0; j < snapped.length; j++) {
+      if (i === j) continue;
+
+    
+      const a1 = snapped[i];
+      const a2 = snapped[j];
+
+      const points = [
+        ["x1", "y1"],
+        ["x2", "y2"],
+      ];
+
+      points.forEach(([px1, py1]) => {
+        points.forEach(([px2, py2]) => {
+          const dx = a1[px1] - a2[px2];
+          const dy = a1[py1] - a2[py2];
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < threshold) {
+            a1[px1] = a2[px2];
+            a1[py1] = a2[py2];
+          }
+        });
+      });
+    }
+  }
+
+  return snapped;
+};
+
+
+
 // -----------------------
 // Main ThreeDCanvas Component
 // -----------------------
 const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => {
+
+  const snappedWalls = snapWalls(walls);
+
+
   const canvasRef = React.useRef(null);
   
   const controlsRef = React.useRef();     
@@ -330,11 +435,16 @@ const stopMoving = () => {
 
 
 const generateWalkthroughPath = (walls = [], structures = []) => {
-  if (!walls.length) return [];
+
 
   
+  if (!walls || walls.length === 0 || !walls[0]) return [];
+
   const referenceWall = walls[0];
+  if (!referenceWall.x1 || !referenceWall.x2 || !referenceWall.y1 || !referenceWall.y2) return [];
+  
   const startX = (referenceWall.x1 + referenceWall.x2) / 2;
+  
   const startZ = (referenceWall.y1 + referenceWall.y2) / 2;
 
  
@@ -438,7 +548,8 @@ const CameraControls = ({ controlsRef, walls }) => {
 const [walkThroughPath, setWalkThroughPath] = React.useState([]);
 
 useEffect(() => {
-  const newPath = generateWalkthroughPath(walls, structures);
+  const newPath = generateWalkthroughPath(snappedWalls, structures);
+
   setWalkThroughPath((prevPath) => {
     const prevStr = JSON.stringify(prevPath);
     const newStr = JSON.stringify(newPath);
@@ -514,10 +625,12 @@ style={{ background: "#ccefff" }}
 <Sky sunPosition={[100, 20, 100]} />
 
   <Controls controlsRef={controlsRef} />
-  <CameraControls controlsRef={controlsRef} walls={walls} />
+  <CameraControls controlsRef={controlsRef} walls={snappedWalls} />
+
 
   <Lighting />
-  <Scene walls={walls} is3DMode={is3DMode} />
+  <Scene walls={snappedWalls} is3DMode={is3DMode} />
+
   <Grid
     args={[100, 100]}
     position={[0, 0, 0]}
@@ -530,9 +643,10 @@ style={{ background: "#ccefff" }}
     fadeDistance={50}
     fadeStrength={1}
   />
-  {walls.map((wall, i) => (
-    <Wall key={i} {...wall} />
-  ))}
+  {snappedWalls.map((wall, i) => (
+  <Wall key={i} {...wall} />
+))}
+
   {structures.map((structure, i) => {
   if (!structure || !structure.type) return null;
 
@@ -549,7 +663,8 @@ style={{ background: "#ccefff" }}
 
 
 
-  <Measurements walls={walls} />
+<Measurements walls={snappedWalls} />
+
   <Scene walls={moves} is3DMode={is3DMode} />
   <CameraPathPreview
   pathPoints={walkThroughPath}
