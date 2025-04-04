@@ -220,6 +220,10 @@ const Scene = ({ walls = [], is3DMode }) => {
 };
 
 
+
+
+
+
 const Controls = ({ controlsRef }) => {
   const { camera, gl } = useThree();
 
@@ -397,6 +401,49 @@ const startMoving = (direction) => {
   }
 };
 
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    console.log("🔑 Key pressed:", e.key); 
+
+    const action = e.key.toLowerCase();
+
+    switch (action) {
+      case 'w':
+        console.log("⬆️ Move camera forward");
+        canvasRef.current?.moveCamera?.('up');
+        break;
+      case 's':
+        console.log("⬇️ Move camera backward");
+        canvasRef.current?.moveCamera?.('down');
+        break;
+      case 'a':
+        console.log("⬅️ Move camera left");
+        canvasRef.current?.moveCamera?.('left');
+        break;
+      case 'd':
+        console.log("➡️ Move camera right");
+        canvasRef.current?.moveCamera?.('right');
+        break;
+      case 'r':
+        console.log("🔄 Reset camera");
+        canvasRef.current?.moveCamera?.('reset');
+        break;
+      default:
+        console.log("⚠️ Unhandled key:", e.key);
+        break;
+    }
+  };
+
+  console.log("✅ Keyboard controls initialized");
+
+  window.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    console.log("❌ Keyboard controls removed");
+    window.removeEventListener('keydown', handleKeyDown);
+  };
+}, []);
+
 const getSceneOffset = (walls) => {
   if (!walls.length) return { x: 0, y: 0 };
 
@@ -485,10 +532,9 @@ const generateWalkthroughPath = (walls = [], structures = []) => {
 
   
 
-const CameraControls = ({ controlsRef, walls }) => {
+const CameraControls = ({ controlsRef, walls, canvasRef }) => {
   const { camera } = useThree();
   const controls = controlsRef.current;
-
   const moveCamera = (direction) => {
     const step = 20;
     const newPos = camera.position.clone();
@@ -530,8 +576,8 @@ const CameraControls = ({ controlsRef, walls }) => {
   };
 
   useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.moveCamera = moveCamera;
+    if (canvasRef?.current) {
+      canvasRef.current.moveCamera = moveCamera;
     }
   }, [camera]);
 
@@ -625,7 +671,12 @@ style={{ background: "#ccefff" }}
 <Sky sunPosition={[100, 20, 100]} />
 
   <Controls controlsRef={controlsRef} />
-  <CameraControls controlsRef={controlsRef} walls={snappedWalls} />
+  <CameraControls
+  controlsRef={controlsRef}
+  canvasRef={canvasRef}
+  walls={snappedWalls}
+/>
+
 
 
   <Lighting />
