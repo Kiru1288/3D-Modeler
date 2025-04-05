@@ -3,7 +3,7 @@ import Toolbar from "./Components/Toolbar";
 import DrawingBoard from "./Components/DrawingBoard";
 import ThreeDCanvas from "./Components/ThreeDCanvas";
 import { FloorPlanProvider } from "./context/FloorPlanContext";
-import StartScreen from "./Components/StartScreen"; // ← Import the StartScreen component
+import StartScreen from "./Components/StartScreen"; 
 import "./styling/App.css";
 
 const TOOLS = Object.freeze({
@@ -90,15 +90,7 @@ function App() {
   return (
     <FloorPlanProvider>
       <div className={`App ${colorScheme}`}>
-        <Toolbar
-          onUploadFloorplan={handleUploadFloorplan}
-          onDrawRoom={handleDrawRoom}
-          onAddSurface={handleAddSurface}
-          onPlaceDoor={handlePlaceDoor}
-          onPlaceWindow={handlePlaceWindow}
-          onPlaceStructural={handlePlaceStructural}
-          onColorSchemeChange={handleColorSchemeChange}
-        />
+        
         <DrawingBoard currentTool={currentTool} floorplan={floorplan} />
         <ThreeDCanvas />
       </div>

@@ -180,13 +180,11 @@ useEffect(() => {
   // ---------------------------
   // Toolbar and Element Buttons
   // ---------------------------
-  const toolbarButtons = [
-    { id: "upload", label: "Upload 2D Floorplan", action: handleUpload, icon: "📁" },
 
-    { id: 'wall', label: 'Draw Wall', action: () => handleToolSelect('wall'), icon: '🧱' },
-    { id: 'room', label: 'Draw Room', action: () => handleToolSelect('room'), icon: '🏠' },
-    
-  ];
+  
+  
+  
+  
 
   const elementButtons = [
     { id: 'wall', icon: '🧱', label: 'Wall', action: () => handleToolSelect('wall') },
@@ -433,223 +431,209 @@ const getWallLength = (wall) => {
   // ---------------------------
   // Render JSX
   // ---------------------------
-  return (
-    <div className={`app-container ${darkMode ? 'dark' : 'light'}`}>
-      {/* Top Toolbar */}
-      <div className="top-toolbar">
-        <div className="toolbar-buttons">
-          {toolbarButtons.map(button => (
-            <button
-              key={button.id}
-              className={`toolbar-btn ${currentTool === button.id ? 'active' : ''}`}
-              onClick={button.action}
-            >
-              <span className="button-icon">{button.icon}</span>
-              <span className="button-label">{button.label}</span>
-            </button>
-          ))}
+  
 
-          {/*  2D/3D Toggle Button  */}
-          <button 
-            className={`toolbar-btn ${is3DMode ? 'active' : ''}`} 
+    
+              
+  return (
+    <>
+      <div className={`app-container ${darkMode ? 'dark' : 'light'}`}>
+        {/* Top Toolbar - Centered Upload + Toggle */}
+        <div
+          className="top-toolbar"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "20px",
+            height: "60px",
+            background: "var(--bg-secondary)",
+            borderBottom: "1px solid var(--highlight)",
+            padding: "0 20px",
+            zIndex: 100
+          }}
+        >
+          <button className="toolbar-btn" onClick={handleUpload}>
+            <span className="button-icon">📁</span>
+            <span className="button-label">Upload 2D Floorplan</span>
+          </button>
+  
+          <button
+            className={`toolbar-btn ${is3DMode ? 'active' : ''}`}
             onClick={toggleView}
           >
             <span className="button-icon">🖼️</span>
-            <span className="button-label">{is3DMode ? "Switch to 2D" : "Switch to 3D"}</span>
+            <span className="button-label">
+              {is3DMode ? "Switch to 2D" : "Switch to 3D"}
+            </span>
           </button>
         </div>
-
-        <div className="color-scheme-selector">
-          <span>Color Scheme:</span>
-          <select 
-            value={colorScheme}
-            onChange={(e) => setColorScheme(e.target.value)}
-            className="color-scheme-select"
-          >
-            <option value="Light">Light</option>
-            <option value="Dark">Dark</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Left Sidebar */}
-      <div className="sidebar">
-        <div className="view-toggle">
-          <button 
-            className={`view-btn ${!is3DMode ? 'active' : ''}`}
-            onClick={() => setIs3DMode(false)}
-          >
-            2D View
-          </button>
-          <button 
-            className={`view-btn ${is3DMode ? 'active' : ''}`}
-            onClick={() => setIs3DMode(true)}
-          >
-            3D View
-          </button>
-        </div>
-        <div className="elements-section">
-          <h2>Add Elements</h2>
-          <div className="elements-grid">
-            {elementButtons.map(element => (
-              <button
-                key={element.id}
-                className={`element-btn ${currentTool === element.id ? 'active' : ''}`}
-                onClick={element.action}
-              >
-                <span className="element-icon">{element.icon}</span>
-                <span className="element-label">{element.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="settings-section">
-          <h2>Settings</h2>
-          <div className="settings-list">
-            <label className="setting-item">
-              <input
-                type="checkbox"
-                checked={showGrid}
-                onChange={() => setShowGrid(!showGrid)}
-              />
-              Show Grid
-            </label>
-            <label className="setting-item">
-              <input
-                type="checkbox"
-                checked={snapEnabled}
-                onChange={() => setSnapEnabled(!snapEnabled)}
-              />
-              Enable Snapping
-            </label>
-            <label className="setting-item">
-              <input
-                type="checkbox"
-                checked={darkMode}
-                onChange={() => setDarkMode(!darkMode)}
-              />
-              Dark Mode
-            </label>
-            <div className="setting-item">
-              <span>Unit:</span>
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                className="unit-select"
-              >
-                <option value="Meters">Meters</option>
-                <option value="Feet">Feet</option>
-              </select>
+  
+        {/* Sidebar (Only for 2D Mode) */}
+        {!is3DMode && (
+          <div className="sidebar">
+            <div className="elements-section">
+              <h2>Add Elements</h2>
+              <div className="elements-grid">
+                {elementButtons.map((element) => (
+                  <button
+                    key={element.id}
+                    className={`element-btn ${currentTool === element.id ? 'active' : ''}`}
+                    onClick={element.action}
+                  >
+                    <span className="element-icon">{element.icon}</span>
+                    <span className="element-label">{element.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+  
+            <div className="settings-section">
+              <h2>Settings</h2>
+              <div className="settings-list">
+                <label className="setting-item">
+                  <input
+                    type="checkbox"
+                    checked={showGrid}
+                    onChange={() => setShowGrid(!showGrid)}
+                  />
+                  Show Grid
+                </label>
+                <label className="setting-item">
+                  <input
+                    type="checkbox"
+                    checked={snapEnabled}
+                    onChange={() => setSnapEnabled(!snapEnabled)}
+                  />
+                  Enable Snapping
+                </label>
+                <label className="setting-item">
+                  <input
+                    type="checkbox"
+                    checked={darkMode}
+                    onChange={() => setDarkMode(!darkMode)}
+                  />
+                  Dark Mode
+                </label>
+                <div className="setting-item">
+                  <span>Unit:</span>
+                  <select
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    className="unit-select"
+                  >
+                    <option value="Meters">Meters</option>
+                    <option value="Feet">Feet</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
+        )}
+  
+        {/* Canvas Area */}
+        <div className="canvas-area">
+          {is3DMode ? (
+            <ThreeDCanvas
+              walls={walls.map((wall) => ({
+                x1: wall.x1,
+                y1: wall.y1,
+                x2: wall.x2,
+                y2: wall.y2,
+                height: 30,
+                thickness: 2,
+                color:
+                  wall.type === "door"
+                    ? "#8B4513"
+                    : wall.type === "window"
+                    ? "#FFD700"
+                    : "#B22222",
+              }))}
+              structures={structures}
+              is3DMode={is3DMode}
+            />
+          ) : (
+            <Stage
+              width={canvasSize.width}
+              height={canvasSize.height}
+              className="drawing-stage"
+              onMouseDown={handleDrawStart}
+              onMouseMove={handleDrawMove}
+              onMouseUp={handleDrawEnd}
+              onDblClick={handleDoubleClick}
+            >
+              <Layer>
+                {showGrid && renderGrid()}
+                {walls.map((wall, i) => {
+                  const midY = (wall.y1 + wall.y2) / 2 - 20;
+                  const midX = (wall.x1 + wall.x2) / 2 + 15;
+                  const textValue = `${getWallLength(wall).toFixed(2)} ${unit}`;
+                  const textWidth = textValue.length * 7;
+  
+                  return (
+                    <React.Fragment key={`wall-label-${i}`}>
+                      <Line
+                        points={[wall.x1, wall.y1, wall.x2, wall.y2]}
+                        stroke={darkMode ? "#fff" : "#000"}
+                        strokeWidth={2}
+                      />
+                      <Text
+                        x={midX - textWidth / 2}
+                        y={Math.max(midY, 10)}
+                        text={textValue}
+                        fontSize={13}
+                        fontFamily="Orbitron, sans-serif"
+                        fill="#FFD700"
+                        stroke="black"
+                        strokeWidth={0.6}
+                        shadowColor="black"
+                        shadowBlur={2}
+                        shadowOffset={{ x: 1, y: 1 }}
+                        shadowOpacity={0.5}
+                      />
+                    </React.Fragment>
+                  );
+                })}
+                {structures.map((structure, i) => renderStructure(structure))}
+                {isDrawing &&
+                  currentLine &&
+                  (() => {
+                    const midX = (currentLine.x1 + currentLine.x2) / 2;
+                    const midY = (currentLine.y1 + currentLine.y2) / 2 - 10;
+                    const textValue = `${getWallLength(currentLine).toFixed(2)} ${unit}`;
+                    const textWidth = textValue.length * 7;
+  
+                    return (
+                      <>
+                        <Line
+                          points={[currentLine.x1, currentLine.y1, currentLine.x2, currentLine.y2]}
+                          stroke="gray"
+                          strokeWidth={2}
+                          dash={[10, 5]}
+                        />
+                        <Text
+                          x={midX - textWidth / 2}
+                          y={Math.max(midY, 10)}
+                          text={textValue}
+                          fontSize={14}
+                          fill="gray"
+                          stroke="black"
+                          strokeWidth={0.5}
+                        />
+                      </>
+                    );
+                  })()}
+              </Layer>
+            </Stage>
+          )}
         </div>
       </div>
-
-      {/* Main Canvas Area */}
-      <div className="canvas-area">
-        {is3DMode ? (
-          <>
-            <ThreeDCanvas
-  walls={walls.map(wall => ({
-    x1: wall.x1,
-    y1: wall.y1,
-    x2: wall.x2,
-    y2: wall.y2,
-    height: 30,
-    thickness: 2,
-    color:
-      wall.type === 'door' ? '#8B4513' :
-      wall.type === 'window' ? '#FFD700' :
-      '#B22222',
-  }))}
-  structures={structures}
-  is3DMode={is3DMode}
-/>
-
-          </>
-        ) : (
-          <Stage
-          width={canvasSize.width}
-          height={canvasSize.height}
-          className="drawing-stage"
-          onMouseDown={handleDrawStart}
-          onMouseMove={handleDrawMove}
-          onMouseUp={handleDrawEnd}
-          onDblClick={handleDoubleClick}
-        >
-          <Layer>
-            {showGrid && renderGrid()}
-        
-            {/* ✅ Existing finalized walls */}
-            {walls.map((wall, i) => {
-  const midY = ((wall.y1 + wall.y2) / 2) - 20; 
-  const midX = ((wall.x1 + wall.x2) / 2) + 15; 
-  const textValue = `${getWallLength(wall).toFixed(2)} ${unit}`;
-  const textWidth = textValue.length * 7;
-
-  return (
-    <React.Fragment key={`wall-label-${i}`}>
-      <Line
-        points={[wall.x1, wall.y1, wall.x2, wall.y2]}
-        stroke={darkMode ? "#fff" : "#000"}
-        strokeWidth={2}
-      />
-      <Text
-        x={midX - textWidth / 2}
-        y={Math.max(midY, 10)}
-        text={textValue}
-        fontSize={13}
-        fontFamily="Orbitron, sans-serif"
-        fill="#FFD700"
-        stroke="black"
-        strokeWidth={0.6}
-        shadowColor="black"
-        shadowBlur={2}
-        shadowOffset={{ x: 1, y: 1 }}
-        shadowOpacity={0.5}
-      />
-    </React.Fragment>
-    
+    </>
   );
-})}
-{structures.map((structure, i) => renderStructure(structure))}
+  
+  
 
-
-
-    {/* Live Drawing Preview with Length Label */}
-    {isDrawing && currentLine && (() => {
-      const midX = (currentLine.x1 + currentLine.x2) / 2;
-      const midY = (currentLine.y1 + currentLine.y2) / 2 - 10;
-      const textValue = `${getWallLength(currentLine).toFixed(2)} ${unit}`;
-      const textWidth = textValue.length * 7;
-
-      return (
-        <>
-          <Line
-            points={[currentLine.x1, currentLine.y1, currentLine.x2, currentLine.y2]}
-            stroke="gray"
-            strokeWidth={2}
-            dash={[10, 5]}
-          />
-          <Text
-            x={midX - textWidth / 2}
-            y={Math.max(midY, 10)}
-            text={textValue}
-            fontSize={14}
-            fill="gray"
-            stroke="black"
-            strokeWidth={0.5}
-          />
-        </>
-      );
-    })()}
-  </Layer>
-</Stage>
-
-        )}
-      </div>
-    </div>
-  );
+  
 }
 
 export default DrawingBoard;

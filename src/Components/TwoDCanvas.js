@@ -120,49 +120,38 @@ const TwoDCanvas = forwardRef(({ width, height, onDraw, onSwitchMode, unit = "Me
 
   return (
     <div className="canvas-container">
-      {/* Toolbar Section */}
-      <div className="toolbar black-gold-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 15px" }}>
-        {/* Left Buttons */}
-        <div>
-          <button className="button-31" onClick={() => {
-            setGridVisible((prev) => !prev);
-            console.log("✅ Grid toggled:", !gridVisible);
-          }}>
-            {gridVisible ? "Hide Grid" : "Show Grid"}
-          </button>
-          <button className="button-31" onClick={() => {
-            setSnapEnabled((prev) => !prev);
-            console.log("✅ Snap toggled:", !snapEnabled);
-          }}>
-            Snap: {snapEnabled ? "ON" : "OFF"}
-          </button>
-        </div>
-        {/* Centered 2D/3D Toggle Button */}
-        <div style={{ textAlign: "center" }}>
-          <button className="button-31" onClick={() => {
-            onSwitchMode();
-            console.log("✅ 2D/3D Toggle clicked");
-          }}>
-            🔄 2D/3D
-          </button>
-        </div>
-        {/* Right Buttons */}
-        <div>
-          <button className="button-31" onClick={() => {
-            undo();
-            console.log("✅ Undo clicked");
-          }}>⏪ Undo</button>
-          <button className="button-31" onClick={() => {
-            redo();
-            console.log("✅ Redo clicked");
-          }}>⏩ Redo</button>
-          <button className="button-31" onClick={() => {
-            resetCanvas();
-            console.log("✅ Reset clicked");
-          }}>🗑️ Reset</button>
-        </div>
+      {/* Top Toolbar - Only Upload + Toggle */}
+      <div
+        className="toolbar black-gold-toolbar"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "10px 15px"
+        }}
+      >
+        {/* Upload Button */}
+        <button className="button-31" onClick={() => {
+          const canvas = document.querySelector("canvas");
+          if (!canvas) return;
+          const image = canvas.toDataURL("image/png");
+          const link = document.createElement("a");
+          link.href = image;
+          link.download = "floorplan.png";
+          link.click();
+        }}>
+          📁 Upload 2D Floorplan
+        </button>
+  
+        {/* 2D/3D Toggle Button */}
+        <button className="button-31" onClick={() => {
+          onSwitchMode();
+          console.log("✅ 2D/3D Toggle clicked");
+        }}>
+          🔄 2D/3D
+        </button>
       </div>
-
+  
       {/* Canvas Section */}
       <Stage
         width={width}
@@ -186,41 +175,40 @@ const TwoDCanvas = forwardRef(({ width, height, onDraw, onSwitchMode, unit = "Me
             <Line
               key={i}
               points={[wall.x1, wall.y1, wall.x2, wall.y2]}
-              stroke={colorMap.wall}  
+              stroke={colorMap.wall}
               strokeWidth={4}
               shadowBlur={5}
               shadowColor="rgba(0, 0, 0, 0.3)"
             />
           ))}
-           {newWall && (() => {
-  const midX = (newWall.x1 + newWall.x2) / 2;
-  const midY = (newWall.y1 + newWall.y2) / 2 - 20;
-  const clampedMidY = Math.max(10, midY);
-  const textValue = `${getWallLength(newWall).toFixed(2)} ${unit}`;
-  const textWidth = textValue.length * 8;
-
-  return (
-    <Text
-      x={midX - textWidth / 2}
-      y={clampedMidY}
-      text={textValue}
-      fontSize={14}
-      fill="white"
-      stroke="black"
-      strokeWidth={1}
-      shadowColor="black"
-      shadowBlur={2}
-      shadowOffset={{ x: 1, y: 1 }}
-      shadowOpacity={0.4}
-    />
-  );
-})()}
-
-          </Layer>
+          {newWall && (() => {
+            const midX = (newWall.x1 + newWall.x2) / 2;
+            const midY = (newWall.y1 + newWall.y2) / 2 - 20;
+            const clampedMidY = Math.max(10, midY);
+            const textValue = `${getWallLength(newWall).toFixed(2)} ${unit}`;
+            const textWidth = textValue.length * 8;
   
+            return (
+              <Text
+                x={midX - textWidth / 2}
+                y={clampedMidY}
+                text={textValue}
+                fontSize={14}
+                fill="white"
+                stroke="black"
+                strokeWidth={1}
+                shadowColor="black"
+                shadowBlur={2}
+                shadowOffset={{ x: 1, y: 1 }}
+                shadowOpacity={0.4}
+              />
+            );
+          })()}
+        </Layer>
       </Stage>
     </div>
   );
+  
 });
 
 export default TwoDCanvas;

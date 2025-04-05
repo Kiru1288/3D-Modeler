@@ -22,6 +22,10 @@ import doorImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Door-Flat.512.png';
 import windowImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Window-Flat.512.png';
 
 import { FloorPlanContext } from '../context/FloorPlanContext';
+import JoystickController from "./JoystickController";
+
+
+
 
 
 // -----------------------
@@ -147,10 +151,11 @@ const Window = ({ position, size, rotation }) => {
         <meshStandardMaterial attach="material" color="#333333" />
       </mesh>
       {/* Glass */}
-      <mesh position={[0, 0, frameThickness / 2]}>
-        <planeGeometry attach="geometry" args={[size.width, size.height]} />
-        <primitive object={MATERIALS.WINDOW} attach="material" />
-      </mesh>
+      <mesh position={[x, y, z]} opacity={0.4} transparent>
+  <boxGeometry args={[length, height, thickness]} />
+  <meshStandardMaterial color="blue" opacity={0.4} />
+</mesh>
+
     </group>
   );
 };
@@ -225,36 +230,16 @@ const Scene = ({ walls = [], is3DMode }) => {
 
 
 const Controls = ({ controlsRef }) => {
+  
   const { camera, gl } = useThree();
-
-  useEffect(() => {
-    const domElement = gl.domElement;
-    const controls = controlsRef.current;
-
-    const handlePointerDown = (e) => {
-      if (e.button === 2) {
-        controls.enableRotate = false;
-      }
-    };
-
-    const handlePointerUp = (e) => {
-      if (e.button === 2) {
-        controls.enableRotate = true;
-      }
-    };
-
-    domElement.addEventListener("pointerdown", handlePointerDown);
-    domElement.addEventListener("pointerup", handlePointerUp);
-
-    return () => {
-      domElement.removeEventListener("pointerdown", handlePointerDown);
-      domElement.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [gl]);
 
   return (
     <OrbitControls
-      ref={controlsRef}
+      ref={(ref) => {
+        if (ref) {
+          controlsRef.current = ref;
+        }
+      }}
       args={[camera, gl.domElement]}
       enableDamping
       dampingFactor={0.05}
@@ -271,10 +256,11 @@ const Controls = ({ controlsRef }) => {
         ONE: THREE.TOUCH.ROTATE,
         TWO: THREE.TOUCH.DOLLY_PAN,
       }}
-      target={[0, 0, 0]}
     />
   );
 };
+
+
 
 
 
@@ -607,19 +593,15 @@ useEffect(() => {
   
   const [previewMode, setPreviewMode] = React.useState(false);
 
-  <button
-  onClick={() => setPreviewMode(prev => !prev)}
-  style={{ position: 'absolute', top: 50, right: 10, zIndex: 10 }}
->
-  {previewMode ? "⏹️ Stop Walkthrough" : "▶️ Start Walkthrough"}
-</button>
-
+  
+  
   
 
   const changeCameraAngle = () => {
     if (!canvasRef.current?.moveCamera) return;
     canvasRef.current.moveCamera("reset");
   };
+  
   
   
   
@@ -641,16 +623,67 @@ useEffect(() => {
   };
   
   
+  const handleMoveJoystick = ({ x, y }) => {
+    const controls = controlsRef.current;
+    if (!controls || !controls.object) return;
+  
+    const camera = controls.object;
+    const speed = 1.5; // adjust to desired speed
+  
+    // Move in world directions (not camera-relative)
+    const move = new THREE.Vector3(x * speed, 0, y * speed);
+  
+    camera.position.add(move);
+    controls.target.add(move); // Keep orbit controls target synced
+    controls.update();
+  };
+  
+  
 
+  const handleRotateJoystick = ({ x, y }) => {
+    const controls = controlsRef.current;
+    if (!controls || !controls.target || !controls.object) {
+      console.warn("⚠️ OrbitControls not ready");
+      return;
+    }
+  
+    const rotateSpeed = 0.05;
+  
+    // Create vector from camera to target
+    const offset = new THREE.Vector3();
+    offset.copy(controls.object.position).sub(controls.target);
+  
+    // Calculate spherical coordinates
+    const spherical = new THREE.Spherical();
+    spherical.setFromVector3(offset);
+  
+    // Adjust spherical angles based on joystick input
+    spherical.theta -= x * rotateSpeed; // horizontal
+    spherical.phi -= y * rotateSpeed;   // vertical
+  
+    // Clamp phi to prevent flipping
+    spherical.phi = THREE.MathUtils.clamp(spherical.phi, 0.01, Math.PI / 2.1);
+  
+    // Convert spherical back to Cartesian
+    offset.setFromSpherical(spherical);
+  
+    // Apply new camera position and look at target
+    controls.object.position.copy(controls.target).add(offset);
+    controls.object.lookAt(controls.target);
+    controls.update();
+  };
+  
+  
+  
+  
+  
+  
+  
+  
+  
   return (
     <>
-      <button
-    onClick={() => setPreviewMode(true)}
-    style={{ position: 'absolute', top: 50, right: 10, zIndex: 10 }}
-    >
-    ▶️ Start Walkthrough
-      </button>
-      
+     
      
 
       
@@ -694,9 +727,7 @@ style={{ background: "#ccefff" }}
     fadeDistance={50}
     fadeStrength={1}
   />
-  {snappedWalls.map((wall, i) => (
-  <Wall key={i} {...wall} />
-))}
+  
 
   {structures.map((structure, i) => {
   if (!structure || !structure.type) return null;
@@ -726,6 +757,37 @@ style={{ background: "#ccefff" }}
 
 
 </Canvas>
+
+{is3DMode && (
+  <button
+    onClick={() => setPreviewMode(prev => !prev)}
+    style={{
+      backgroundColor: "#FFD700",
+      color: "black",
+      padding: "8px 16px",
+      borderRadius: "6px",
+      border: "none",
+      fontWeight: "bold",
+      marginRight: "10px",
+      cursor: "pointer",
+      boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+      zIndex: 1000,
+      position: 'absolute',
+      top: 80,
+      right: 20,
+    }}
+  >
+    {previewMode ? "⏹️ Stop Walkthrough" : "▶️ Start Walkthrough"}
+  </button>
+)}
+
+{is3DMode && (
+  <>
+    <JoystickController onMove={handleMoveJoystick} position="left" />
+    <JoystickController onMove={handleRotateJoystick} position="right" />
+  </>
+)}
+
 
       
     </>
