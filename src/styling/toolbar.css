@@ -1,0 +1,52 @@
+/* Add this to your existing toolbar.css */
+.dropdown-menu {
+  background: black;
+  border: 2px solid gold;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+  z-index: 1000; /* Ensure it appears above other elements */
+}
+
+.dropdown-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: black;
+  color: gold;
+  border: none;
+  padding: 8px 12px;
+  margin: 4px 0;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.dropdown-menu button:hover {
+  background: gold;
+  color: black;
+}
+
+.hamburger-menu {
+  font-size: 24px;
+  padding: 10px;
+  background: black;
+  color: gold;
+  border: 2px solid gold;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1100; /* Higher than other elements */
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background: black;
+  border: 2px solid gold;
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1100; /* Higher than other elements */
+  min-width: 150px;
+  display: block;
+}

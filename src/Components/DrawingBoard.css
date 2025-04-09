@@ -1,0 +1,536 @@
+@import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Default Theme: Dark */
+  --bg-dark: #000000; /* Dark mode background */
+  --bg-secondary: #000000; /* Dark zinc */
+  --bg-tertiary: #000000; /* Zinc */
+  --highlight: #FACC15; /* Modern Amber/Yellow */
+  --border-color: #333333; /* Match tertiary */
+  --font-color: #ffffff; /* Lighter zinc */
+  --font-color-secondary: #cccccc; /* Medium zinc */
+  --font-color-highlight: #ffffff; /* White for contrast */
+
+  --light-bg: #ffffff;
+  --active-bg: #e0e0e0;
+  --active-border: #999;
+  --padding-small: 8px;
+  --padding-medium: 15px;
+  --padding-large: 20px;
+  --border-radius: 6px;
+  --shadow-light: 0 2px 5px rgba(0, 0, 0, 0.2);
+  --shadow-medium: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --font-family: 'Nunito', sans-serif; /* Update font family */
+  --font-family-boxy: 'Teko', sans-serif; /* Boxy font for start screen */
+}
+
+/* Light Theme Overrides */
+.app-container.light-theme {
+  --bg-dark: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ffffff;
+  --border-color: #d1d5db;
+  --font-color: #111827;
+  --font-color-secondary: #374151;
+  --font-color-highlight: #000000;
+
+  --shadow-light: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 10px rgba(0, 0, 0, 0.15);
+
+  /* Override start card styles for light mode */
+  .start-card {
+    background-color: var(--bg-secondary); /* Use light secondary background */
+    border: 1px solid var(--border-color); /* Use light border color */
+    /* Keep other overrides like font colors if needed, but they should inherit correctly */
+  }
+
+  /* Ensure input uses light background (it should inherit --bg-dark: #ffffff) */
+  .start-input {
+     /* No override needed here, background: var(--bg-dark) works */
+     border-color: var(--border-color); /* Ensure light border */
+     color: var(--font-color); /* Ensure dark text */
+  }
+
+  /* Ensure buttons use light theme variables */
+  .start-action-btn {
+    background: var(--bg-tertiary); /* Light tertiary background */
+    color: var(--font-color); /* Dark text */
+  }
+
+   .start-action-btn:hover {
+    background: var(--highlight);
+    color: var(--font-color-highlight);
+  }
+
+  .start-secondary-btn {
+    background: transparent;
+    color: var(--font-color-secondary);
+    border: 1px solid var(--border-color);
+  }
+
+  .start-secondary-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--font-color);
+    border-color: var(--bg-tertiary);
+  }
+
+  .start-action-btn:disabled,
+  .start-secondary-btn:disabled {
+      background: var(--bg-tertiary);
+      color: var(--font-color-secondary);
+      border: none;
+  }
+}
+
+body {
+  font-family: var(--font-family); /* Apply font globally */
+  margin: 0; /* Remove default body margin */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App Container - Applies theme */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background: var(--bg-dark);
+  color: var(--font-color); /* Set base font color */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-family); /* Ensure font is applied */
+}
+
+/* Top Toolbar */
+.top-toolbar {
+  position: fixed;
+  top: 0;
+  left: 280px; /* Adjust if sidebar width changes */
+  right: 0;
+  height: 60px;
+  background: #000000; /* Set to black */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 var(--padding-large);
+  z-index: 100;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-light);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.toolbar-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--font-color);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.toolbar-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--font-color-highlight);
+}
+
+.toolbar-btn.active {
+  background: var(--highlight);
+  color: var(--font-color-highlight);
+  border-color: var(--highlight);
+}
+
+/* Download button icon-only */
+.toolbar-btn:first-child {
+  padding: 8px;
+}
+
+.toolbar-btn:first-child .button-label {
+  display: none;
+}
+
+.button-icon {
+  font-size: 1.3em;
+  display: flex;
+  align-items: center;
+  color: var(--font-color); /* Icon color */
+}
+
+.toolbar-btn:hover .button-icon,
+.toolbar-btn.active .button-icon {
+  color: var(--font-color-highlight);
+}
+
+.button-label {
+  font-size: 0.85em;
+  color: var(--font-color-secondary);
+}
+
+.toolbar-btn:hover .button-label,
+.toolbar-btn.active .button-label {
+  color: var(--font-color-highlight);
+}
+
+.toggle-btn-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.color-scheme-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--font-color);
+}
+
+.color-scheme-select {
+  background: #333;
+  border: 1px solid var(--highlight);
+  color: var(--highlight);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background: var(--bg-dark);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  border-right: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.view-btn {
+  flex: 1;
+  padding: var(--padding-small);
+  border: 1px solid var(--border-color);
+  background: var(--light-bg);
+  cursor: pointer;
+}
+
+.view-btn.active {
+  background: var(--active-bg);
+  border-color: var(--active-border);
+}
+
+/* Elements Section */
+.elements-section {
+  background: var(--bg-dark);
+  border-radius: 8px;
+  padding: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.elements-section h2 {
+  color: var(--font-color);
+  margin-bottom: 15px;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.elements-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.element-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--padding-small);
+  border: 1px solid var(--border-color);
+  background: var(--bg-dark); /* Example */
+  cursor: pointer;
+  color: var(--font-color);
+}
+
+.element-btn.active {
+  background-color: var(--highlight);
+  color: var(--font-color-highlight);
+  border: 1px solid var(--highlight);
+}
+
+.element-icon {
+  font-size: 1.5em;
+}
+
+.element-label {
+  font-size: 0.8em;
+}
+
+/* Settings Section */
+.settings-section {
+  background: var(--bg-dark);
+  border-radius: 8px;
+  padding: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.settings-section h2 {
+  color: var(--font-color);
+  margin-bottom: 15px;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--font-color);
+  transition: color 0.3s ease;
+}
+
+.unit-select {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--font-color);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Canvas Area */
+.canvas-area {
+  flex: 1;
+  margin-top: 60px;
+  background: var(--bg-dark);
+  position: relative;
+  transition: background-color 0.3s ease;
+  padding: 15px;
+}
+
+.drawing-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Start Screen Specific Styles */
+.start-screen-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--padding-large);
+  box-sizing: border-box;
+}
+
+/* Style for the logo */
+.start-screen-logo {
+  max-width: 750px; /* Increased max width */
+  margin-bottom: 2rem; /* Keep bottom margin */
+  height: auto; /* Maintain aspect ratio */
+  animation: popOut 0.5s ease-out forwards; /* Add pop out animation */
+}
+
+@keyframes popOut {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.start-card {
+  background-color: #101010; /* Darker grey */
+  padding: 2.5rem 3rem; /* Keep padding */
+  border-radius: 0px; /* Remove rounded corners */
+  box-shadow: var(--shadow-medium);
+  width: 100%;
+  max-width: 420px; /* Thinner max width */
+  text-align: center;
+  animation: fadeIn 0.5s ease-out 2s forwards; /* Delay card appearance */
+  border: 1px solid #000000; /* Black outline */
+  position: relative; /* Needed for theme toggle absolute positioning */
+  font-family: var(--font-family-boxy); /* Apply boxy font */
+}
+
+.start-card h1 {
+  font-size: 2.0rem; /* Slightly smaller */
+  font-weight: 700; /* Bolder */
+  margin-bottom: 40px; /* More space */
+  color: var(--font-color); /* Use main font color */
+  /* Highlight part of the text */
+  /* This requires changing the JSX structure if you want 'Your Project' yellow */
+}
+
+.start-input {
+  width: 100%;
+  padding: 14px 18px; /* More padding */
+  font-size: 1rem;
+  /* font-family: var(--font-family); REMOVED - Inherit from card */
+  border: 1px solid var(--bg-tertiary); /* Use tertiary background color for border */
+  border-radius: var(--border-radius);
+  background: var(--bg-dark);
+  color: var(--font-color);
+  margin-bottom: 25px; /* More spacing */
+  box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.start-input:focus {
+  outline: none;
+  border-color: var(--highlight); /* Yellow border on focus */
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3); /* Yellow focus ring */
+}
+
+.start-input::placeholder {
+  color: var(--font-color-secondary);
+  font-size: 1rem;
+}
+
+.error-message {
+  color: #e57373; /* Softer red */
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  min-height: 1.2em; /* Reserve space */
+}
+
+.start-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* More gap */
+}
+
+.start-action-btn,
+.start-secondary-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 14px; /* Increase padding */
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--border-radius);
+  display: flex; /* Needed for icon alignment */
+  align-items: center;
+  gap: 8px; /* Space between icon and text */
+  transition: all 0.2s ease;
+  font-family: var(--font-family); /* Apply default Nunito font */
+}
+
+.start-action-btn {
+  /* Default state - Subtle background */
+  background: var(--bg-tertiary); /* Use tertiary background */
+  color: var(--font-color); /* Use default light font color */
+  border: none;
+  box-shadow: none;
+}
+
+.start-action-btn:hover {
+  /* Hover state - Becomes yellow */
+  background: var(--highlight);
+  color: var(--font-color-highlight);
+  border: none;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.start-secondary-btn {
+  background: transparent;
+  color: var(--font-color-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.start-secondary-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--font-color);
+  border-color: var(--bg-tertiary);
+}
+
+/* Disabled state adjustment */
+.start-action-btn:disabled,
+.start-secondary-btn:disabled {
+  background: var(--bg-tertiary);
+  color: var(--font-color-secondary);
+  border: none;
+  cursor: not-allowed;
+  opacity: 0.5; /* Slightly more faded */
+  transform: none;
+  box-shadow: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Theme Toggle Button (General) */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--font-color-secondary);
+  cursor: pointer;
+  font-size: 1.5rem; /* Adjust size as needed */
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--highlight);
+}
+
+/* Specific positioning for start screen toggle */
+.start-theme-toggle {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .canvas-area {
+    margin-top: 0;
+  }
+
+  .top-toolbar {
+    left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .elements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
