@@ -1,4 +1,4 @@
-import React, { useEffect, memo, useRef, useState } from "react";
+import React, { useEffect, memo, useRef, useCallback } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 
 import {
@@ -6,30 +6,13 @@ import {
   Grid,
   PerspectiveCamera,
   Html,
-  Plane,
-  SpotLight,
+  SpotLight as DreiSpotLight,
+  Sky
 } from "@react-three/drei";
 import * as THREE from "three";
 import Door from "./Doors/Door";
-import { Sky } from '@react-three/drei';
-import { useLoader } from "@react-three/fiber";
-import { TextureLoader } from "three";
-import brickColor from "../Assets/brick_4_diff_4k.jpg";
-import brickNormal from "../Assets/brick_4_nor_dx_4k.jpg";
-import brickRoughness from "../Assets/brick_4_rough_4k.jpg";
-import brickAO from "../Assets/brick_4_ao_4k.jpg";
-import doorImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Door-Flat.512.png';
-import windowImg from '../Assets/Microsoft-Fluentui-Emoji-Flat-Window-Flat.512.png';
-
-import { FloorPlanContext } from '../context/FloorPlanContext';
+import Window from "./Windows";
 import JoystickController from "./JoystickController";
-import woodFloorTexture from "../Assets/wood_floor_worn_disp_4k.png";
-import Window from "./Windows"; 
-
-
-
-
-
 
 // -----------------------
 // Materials
@@ -45,6 +28,11 @@ const MATERIALS = {
     roughness: 0.8,
     metalness: 0.2,
   }),
+  GRASS: new THREE.MeshStandardMaterial({
+    color: "#4caf50",
+    roughness: 0.9,
+    metalness: 0.1,
+  }),
   WINDOW: new THREE.MeshPhysicalMaterial({
     color: "#a8d8ff",
     transmission: 0.5,
@@ -57,178 +45,378 @@ const MATERIALS = {
     roughness: 0.6,
     metalness: 0.2,
   }),
+  FLOOR_TILE: new THREE.MeshStandardMaterial({
+    color: "#ffffff",
+    roughness: 0.9,
+    metalness: 0.0,
+  }),
+  FLOOR_CARPET: new THREE.MeshStandardMaterial({
+    color: "#d3d3d3",
+    roughness: 0.8,
+    metalness: 0.0,
+  }),
+  CEILING: new THREE.MeshStandardMaterial({
+    color: "#f0f0f0",
+    roughness: 0.7,
+    metalness: 0.0,
+  }),
+  FURNITURE: new THREE.MeshStandardMaterial({
+    color: "#8b4513",
+    roughness: 0.6,
+    metalness: 0.2,
+  }),
+  WALL_CONCRETE: new THREE.MeshStandardMaterial({
+    color: "#808080",
+    roughness: 0.6,
+    metalness: 0.1,
+  }),
+  WALL_DRYWALL: new THREE.MeshStandardMaterial({
+    color: "#f5f5f5",
+    roughness: 0.5,
+    metalness: 0.0,
+  }),
+  WALL_BRICK: new THREE.MeshStandardMaterial({
+    color: "#b22222",
+    roughness: 0.7,
+    metalness: 0.0,
+  }),
+  DOOR_SLIDING: new THREE.MeshStandardMaterial({
+    color: "#deb887",
+    roughness: 0.5,
+    metalness: 0.2,
+  }),
+  DOOR_FRENCH: new THREE.MeshStandardMaterial({
+    color: "#fffaf0",
+    roughness: 0.4,
+    metalness: 0.3,
+  }),
+  WINDOW_BAY: new THREE.MeshPhysicalMaterial({
+    color: "#add8e6",
+    transmission: 0.6,
+    transparent: true,
+    roughness: 0.1,
+    metalness: 0.1,
+  }),
+  WINDOW_CASEMENT: new THREE.MeshPhysicalMaterial({
+    color: "#87ceeb",
+    transmission: 0.5,
+    transparent: true,
+    roughness: 0.1,
+    metalness: 0.1,
+  }),
+  FURNITURE_TABLE: new THREE.MeshStandardMaterial({
+    color: "#8b4513",
+    roughness: 0.6,
+    metalness: 0.2,
+  }),
+  FURNITURE_CHAIR: new THREE.MeshStandardMaterial({
+    color: "#a0522d",
+    roughness: 0.5,
+    metalness: 0.2,
+  }),
+  FURNITURE_SOFA: new THREE.MeshStandardMaterial({
+    color: "#d2691e",
+    roughness: 0.7,
+    metalness: 0.1,
+  }),
+  DECOR_PLANT: new THREE.MeshStandardMaterial({
+    color: "#228b22",
+    roughness: 0.8,
+    metalness: 0.0,
+  }),
+  DECOR_LAMP: new THREE.MeshStandardMaterial({
+    color: "#ffd700",
+    roughness: 0.3,
+    metalness: 0.5,
+  }),
 };
+
+// -----------------------
+// Materials with textures
+// -----------------------
+const createBrickTexture = () => {
+  const textureLoader = new THREE.TextureLoader();
+  const brickColor = textureLoader.load('/textures/brick_diffuse.jpg');
+  const brickNormal = textureLoader.load('/textures/brick_normal.jpg');
+  const brickRoughness = textureLoader.load('/textures/brick_roughness.jpg');
+  
+  // Set repeat pattern for the textures
+  [brickColor, brickNormal, brickRoughness].forEach(texture => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(0.5, 0.5);
+  });
+  
+  return new THREE.MeshStandardMaterial({
+    map: brickColor,
+    normalMap: brickNormal,
+    roughnessMap: brickRoughness,
+    roughness: 0.8,
+    metalness: 0.1,
+  });
+};
+
+const createWoodTexture = () => {
+  const textureLoader = new THREE.TextureLoader();
+  const woodColor = textureLoader.load('/textures/wood_diffuse.jpg');
+  const woodNormal = textureLoader.load('/textures/wood_normal.jpg');
+  
+  // Set repeat pattern for the textures
+  [woodColor, woodNormal].forEach(texture => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1, 1);
+  });
+  
+  return new THREE.MeshStandardMaterial({
+    map: woodColor,
+    normalMap: woodNormal,
+    roughness: 0.7,
+    metalness: 0.0,
+  });
+};
+
+// Initialize textures - this function creates placeholder textures to use before actual textures load
+const initializePlaceholderMaterials = () => {
+  return {
+    WALL_BRICK: new THREE.MeshStandardMaterial({
+      color: "#b22222",
+      roughness: 0.7,
+      metalness: 0.0,
+    }),
+    FURNITURE_WOOD: new THREE.MeshStandardMaterial({
+      color: "#8b4513",
+      roughness: 0.6,
+      metalness: 0.0,
+    })
+  };
+};
+
+// Load textures asynchronously
+(() => {
+  try {
+    const brickMaterial = createBrickTexture();
+    const woodMaterial = createWoodTexture();
+    
+    MATERIALS.WALL_BRICK = brickMaterial;
+    MATERIALS.WALL_WOOD = woodMaterial;
+    MATERIALS.FURNITURE_TABLE = woodMaterial.clone();
+    MATERIALS.FURNITURE_CHAIR = woodMaterial.clone();
+    
+    console.log("Textures loaded successfully");
+  } catch (error) {
+    console.error("Error loading textures:", error);
+    // If texture loading fails, use placeholder materials
+    const placeholders = initializePlaceholderMaterials();
+    Object.assign(MATERIALS, placeholders);
+  }
+})();
 
 // -----------------------
 // Wall Component
 // -----------------------
-const Wall = ({ x1, y1, x2, y2, height = 30, thickness = 2, type }) => {
-  const [brickColorMap, brickNormalMap, brickRoughnessMap, brickAOMap] = useLoader(TextureLoader, [
-    brickColor,
-    brickNormal,
-    brickRoughness,
-    brickAO,
-  ]);
-
-  const [woodMap] = useLoader(TextureLoader, [woodFloorTexture]);
-
+const Wall = ({ x1, y1, x2, y2, height = 30, thickness = 2, type, material }) => {
+  const wallMaterial = material || MATERIALS[type] || MATERIALS.WALL_CONCRETE;
   const length = Math.hypot(x2 - x1, y2 - y1);
   const angle = Math.atan2(y2 - y1, x2 - x1);
-
-  useEffect(() => {
-    const maps = type === "room"
-      ? [woodMap]
-      : [brickColorMap, brickNormalMap, brickRoughnessMap, brickAOMap];
-
-    maps.forEach((map) => {
-      if (map) {
-        map.wrapS = map.wrapT = THREE.RepeatWrapping;
-        map.repeat.set(length / 10, height / 10);
-      }
-    });
-
-    console.log(`🧱 Rendering wall of type: ${type}`, {
-      position: [(x1 + x2) / 2, height / 2, -(y1 + y2) / 2],
-      texture: type === "room" ? "wood" : "brick"
-    });
-  }, [type, woodMap, brickColorMap, brickNormalMap, brickRoughnessMap, brickAOMap, length, height]);
+  
+  // Load texture color based on wall type, used as fallback if wallMaterial is unavailable
+  let wallColor;
+  switch(type) {
+    case 'brick':
+      wallColor = '#b22222'; // Brick red
+      break;
+    case 'concrete':
+      wallColor = '#808080'; // Gray
+      break;
+    case 'drywall':
+      wallColor = '#f5f5f5'; // Off-white
+      break;
+    default:
+      wallColor = '#cccccc'; // Default gray
+  }
+  // Using wallColor in debug: console.log("Wall color for material fallback:", wallColor);
 
   return (
-    <mesh
+    <group
       position={[(x1 + x2) / 2, height / 2, -(y1 + y2) / 2]}
       rotation={[0, -angle, 0]}
-      castShadow
-      receiveShadow
     >
-      <boxGeometry args={[length, height, thickness]} />
-      {type === "room" ? (
-        <meshStandardMaterial map={woodMap} />
-      ) : (
-        <meshStandardMaterial
-          map={brickColorMap}
-          normalMap={brickNormalMap}
-          roughnessMap={brickRoughnessMap}
-          aoMap={brickAOMap}
-        />
-      )}
-    </mesh>
+      {/* Main wall */}
+      <mesh
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[length, height, thickness]} />
+        <primitive object={wallMaterial} />
+      </mesh>
+      
+      {/* Baseboard */}
+      <mesh
+        position={[0, -height/2 + 1, thickness/2 + 0.1]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[length, 2, 0.2]} />
+        <meshStandardMaterial color="#555555" />
+      </mesh>
+      
+      {/* Opposite baseboard */}
+      <mesh
+        position={[0, -height/2 + 1, -thickness/2 - 0.1]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[length, 2, 0.2]} />
+        <meshStandardMaterial color="#555555" />
+      </mesh>
+    </group>
   );
 };
-
-
-const CameraFollower = ({ path }) => {
-  const ref = useRef();
-  const index = useRef(0);
-
-  useFrame(() => {
-    if (path.length === 0 || !ref.current) return;
-
-    // Move along the wall path
-    const current = path[index.current % path.length];
-    const next = path[(index.current + 1) % path.length];
-
-    const cam = ref.current;
-    cam.position.lerp({ x: current.x, y: 5, z: current.y }, 0.1);
-    cam.lookAt(next.x, 0, next.y);
-
-    // Move to next point once close enough
-    if (
-      Math.abs(cam.position.x - current.x) < 0.2 &&
-      Math.abs(cam.position.z - current.y) < 0.2
-    ) {
-      index.current = (index.current + 1) % path.length;
-    }
-  });
-
-  return (
-    <PerspectiveCamera ref={ref} makeDefault position={[0, 5, 0]} fov={75} />
-  );
-};
-
-
-// -----------------------
-// Window Component
-// -----------------------
 
 // -----------------------
 // Lighting Component
 // -----------------------
 const Lighting = () => (
   <>
-    <ambientLight intensity={1.0} />
-    <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow />
-    <hemisphereLight intensity={0.6} groundColor={new THREE.Color("#b97a20")} />
+    <ambientLight intensity={0.7} />
+    <directionalLight 
+      position={[0, 100, 0]} 
+      intensity={1.0} 
+      castShadow 
+      shadow-mapSize-width={2048}
+      shadow-mapSize-height={2048}
+      shadow-camera-left={-500}
+      shadow-camera-right={500}
+      shadow-camera-top={500}
+      shadow-camera-bottom={-500}
+      shadow-camera-far={1500}
+      shadow-bias={-0.0001}
+    />
+    <directionalLight position={[50, 50, 50]} intensity={0.4} />
+    <hemisphereLight intensity={0.5} groundColor={new THREE.Color("#8BC34A")} />
   </>
+);
+
+// Add natural terrain features
+const TerrainFeatures = () => (
+  <group>
+    {/* Add a few rocks - very subtle */}
+    {Array.from({ length: 4 }).map((_, idx) => {
+      const x = (Math.random() - 0.5) * 800;
+      const z = (Math.random() - 0.5) * 800;
+      const scale = 0.5 + Math.random() * 1;
+      
+      return (
+        <mesh 
+          key={`rock-${idx}`} 
+          position={[x, scale/3, z]} 
+          rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+          castShadow
+          receiveShadow
+        >
+          <sphereGeometry args={[scale, 6, 6]} />
+          <meshStandardMaterial 
+            color="#C5E1A5" 
+            roughness={0.9}
+            metalness={0.1}
+          />
+        </mesh>
+      );
+    })}
+    
+    {/* Add small bushes - simple green spheres, very subtle */}
+    {Array.from({ length: 6 }).map((_, idx) => {
+      const x = (Math.random() - 0.5) * 700;
+      const z = (Math.random() - 0.5) * 700;
+      const scale = 1 + Math.random() * 2;
+      const yPos = scale * 0.1;
+      
+      return (
+        <group 
+          key={`bush-${idx}`} 
+          position={[x, yPos, z]}
+        >
+          <mesh castShadow receiveShadow>
+            <sphereGeometry args={[scale, 8, 8]} />
+            <meshStandardMaterial 
+              color="#C5E1A5" 
+              roughness={1.0}
+            />
+          </mesh>
+        </group>
+      );
+    })}
+  </group>
 );
 
 // -----------------------
 // New Scene Component
 // -----------------------
 const Scene = ({ walls = [], is3DMode }) => {
-  
-
-
-
-  
   useEffect(() => {
-  console.log("🎭 Walls Rendered in Scene:", walls);
-  console.log("🎬 Rendering Scene with Walls:", walls);
-  console.log("📸 Camera Props:", is3DMode ? "3D View" : "2D View");
-}, [walls, is3DMode]);
-
+    console.log("🎭 Walls Rendered in Scene:", walls.length);
+  }, [walls, is3DMode]);
 
   const cameraProps = is3DMode
-    ? { position: [0, 800, 800], fov: 40 }
-    : { position: [0, 1000, 0], fov: 90 };
+    ? { position: [0, 100, 200], fov: 55 }
+    : { position: [0, 1000, 0], fov: 50 };
 
   return (
     <>
       <PerspectiveCamera makeDefault {...cameraProps} />
-      <ambientLight intensity={1.0} />
-      <SpotLight position={[150, 500, 150]} intensity={1.5} castShadow />
 
       <OrbitControls
-  enableDamping
-  dampingFactor={0.05}
-  rotateSpeed={0.6}
-  zoomSpeed={0.8}
-  panSpeed={0.5}
-  minDistance={10}
-  maxDistance={800}
-  maxPolarAngle={Math.PI / 2}
-  screenSpacePanning={true}
-  target={[0, 0, 0]}
-  enableRotate={true}
-/>
+        enableDamping
+        dampingFactor={0.05}
+        rotateSpeed={0.6}
+        zoomSpeed={0.8}
+        panSpeed={0.5}
+        minDistance={10}
+        maxDistance={800}
+        maxPolarAngle={Math.PI / 2.1}
+        screenSpacePanning={true}
+        target={[0, 0, 0]}
+        enableRotate={true}
+      />
 
-
-
-
-
-      {/* Full-Screen Floor */}
-      <Plane args={[3000, 3000]} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-  <meshStandardMaterial color="#7cfc00" /> {/* Lawn green */}
-</Plane>
-
-
-      {/* Render Walls (Ensure Valid x1, y1, x2, y2) */}
-      {walls.map((wall, i) => {
-  console.log(`🧱 Wall #${i}:`, wall);
-  return <Wall key={i} {...wall} height={30} thickness={2} type={wall.type} />;
-})}
-
-
+      {/* Render Walls with better textures */}
+      <group>
+        {walls.map((wall, i) => {
+          if (!wall || !wall.x1 || !wall.y1 || !wall.x2 || !wall.y2) return null;
+          
+          // Add proper material based on wall type
+          let wallMaterial;
+          switch(wall.type) {
+            case 'concrete':
+              wallMaterial = MATERIALS.WALL_CONCRETE;
+              break;
+            case 'brick':
+              wallMaterial = MATERIALS.WALL_BRICK;
+              break;
+            case 'drywall':
+              wallMaterial = MATERIALS.WALL_DRYWALL;
+              break;
+            default:
+              wallMaterial = MATERIALS.WALL;
+              break;
+          }
+          
+          return (
+            <Wall 
+              key={i} 
+              {...wall} 
+              height={30} 
+              thickness={5}
+              type={wall.type || 'brick'}
+              material={wallMaterial}
+            />
+          );
+        })}
+      </group>
     </>
   );
 };
 
-
-
-
-
-
 const Controls = ({ controlsRef }) => {
-  
   const { camera, gl } = useThree();
 
   return (
@@ -258,19 +446,6 @@ const Controls = ({ controlsRef }) => {
   );
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-// Define the missing 'Measurements' component
 const Measurements = ({ walls }) => {
   return walls
     .filter(wall => wall.start && wall.end)
@@ -279,15 +454,31 @@ const Measurements = ({ walls }) => {
       const endVec = new THREE.Vector2(wall.end?.x || 0, wall.end?.z || 0);
       const length = endVec.sub(startVec).length();
 
+      // Calculate midpoint between start and end points
       const midpoint = [
         (wall.start?.x || 0 + wall.end?.x || 0) / 2,
-        wall.height / 2,
+        wall.height / 2 + 15, // Position the labels above the walls
         (wall.start?.z || 0 + wall.end?.z || 0) / 2,
       ];
 
       return (
-        <Html key={i} position={midpoint}>
-          <div className="measurement-label">{length.toFixed(2)}m</div>
+        <Html key={i} position={midpoint} center>
+          <div 
+            className="measurement-label"
+            style={{
+              background: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+              userSelect: 'none'
+            }}
+          >
+            {length.toFixed(2)}m
+          </div>
         </Html>
       );
     });
@@ -325,7 +516,6 @@ const CameraPathPreview = ({ pathPoints = [], enabled, speed = 0.5, onEnd }) => 
   );
 };
 
-
 const snapWalls = (walls, threshold = 5) => {
   const snapped = [...walls];
 
@@ -360,9 +550,6 @@ const snapWalls = (walls, threshold = 5) => {
   return snapped;
 };
 
-
-
-
 // -----------------------
 // Main ThreeDCanvas Component
 // -----------------------
@@ -370,7 +557,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
   const snappedWalls = snapWalls(walls);
   const canvasRef = React.useRef(null);
   const controlsRef = React.useRef(); 
-  const holdIntervalRef = React.useRef(null);
   const [walkThroughPath, setWalkThroughPath] = React.useState([]);
   const [previewMode, setPreviewMode] = React.useState(false);
 
@@ -382,15 +568,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
       return prevStr !== newStr ? newPath : prevPath;
     });
   }, [walls, structures, snappedWalls]);
-
-  const startMoving = (direction) => {
-    if (canvasRef.current?.moveCamera) {
-      canvasRef.current.moveCamera(direction);
-      holdIntervalRef.current = setInterval(() => {
-        canvasRef.current.moveCamera(direction);
-      }, 100);
-    }
-  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -435,48 +612,7 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     };
   }, [canvasRef]);
 
-  const getSceneOffset = (walls) => {
-    if (!walls.length) return { x: 0, y: 0 };
-
-    let sumX = 0, sumY = 0;
-    walls.forEach(wall => {
-      sumX += wall.x1 + wall.x2;
-      sumY += wall.y1 + wall.y2;
-    });
-
-    const avgX = sumX / (2 * walls.length);
-    const avgY = sumY / (2 * walls.length);
-
-    return { x: avgX, y: avgY };
-  };
-
-
-  const calculateCenter = (objects) => {
-    if (!objects.length) return new THREE.Vector3(0, 0, 0);
-
-    let sumX = 0, sumZ = 0;
-    objects.forEach(obj => {
-      sumX += (obj.x1 + obj.x2) / 2;
-      sumZ += (obj.y1 + obj.y2) / 2;
-    });
-
-    const avgX = sumX / objects.length;
-    const avgZ = sumZ / objects.length;
-
-    return new THREE.Vector3(avgX, 0, -avgZ);
-  };
-
-
-
-  const stopMoving = () => {
-    clearInterval(holdIntervalRef.current);
-  };
-
-
   const generateWalkthroughPath = (walls = [], structures = []) => {
-
-
-    
     if (!walls || walls.length === 0 || !walls[0]) return [];
 
     const referenceWall = walls[0];
@@ -486,7 +622,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     
     const startZ = (referenceWall.y1 + referenceWall.y2) / 2;
 
-   
     const dx = referenceWall.x2 - referenceWall.x1;
     const dz = referenceWall.y2 - referenceWall.y1;
     const wallLength = Math.hypot(dx, dz);
@@ -495,7 +630,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     const entryX = startX + inwardNormal[0] * 50;
     const entryZ = startZ + inwardNormal[1] * 50;
 
-   
     const xs = walls.flatMap(w => [w.x1, w.x2]);
     const zs = walls.flatMap(w => [w.y1, w.y2]);
 
@@ -504,7 +638,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     const minZ = Math.min(...zs) + 50;
     const maxZ = Math.max(...zs) - 50;
 
-    
     const path = [[entryX, 10, -entryZ]];
     const spacing = 100;
     let forward = true;
@@ -521,51 +654,46 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     return path;
   };
 
-
-    
-
   const CameraControls = ({ controlsRef, walls, canvasRef }) => {
     const { camera } = useThree();
-    const controls = controlsRef.current;
-    const moveCamera = (direction) => {
-      const step = 20;
-      const newPos = camera.position.clone();
-
+    
+    const moveCamera = useCallback((direction) => {
+      if (!controlsRef.current) return;
+      
+      // Camera movement logic
+      const cameraDirection = new THREE.Vector3();
+      const camera = controlsRef.current.object;
+      camera.getWorldDirection(cameraDirection);
+      cameraDirection.y = 0;
+      cameraDirection.normalize();
+      
+      const speed = 5;
+      const sideways = new THREE.Vector3().crossVectors(
+        cameraDirection,
+        new THREE.Vector3(0, 1, 0)
+      );
+      
       switch (direction) {
-        case "up":
-          newPos.z -= step;
+        case "forward":
+          camera.position.add(cameraDirection.multiplyScalar(speed));
           break;
-        case "down":
-          newPos.z += step;
+        case "backward":
+          camera.position.add(cameraDirection.multiplyScalar(-speed));
           break;
         case "left":
-          newPos.x -= step;
+          camera.position.add(sideways.multiplyScalar(speed));
           break;
         case "right":
-          newPos.x += step;
+          camera.position.add(sideways.multiplyScalar(-speed));
           break;
-        case "reset": {
-          const center = calculateCenter(walls);
-          newPos.set(center.x, 300, center.z);
-          camera.position.copy(newPos);
-          camera.lookAt(center);
-          if (controls) {
-            controls.target.set(center.x, 0, center.z);
-            controls.update();
-          }
-          return;
-        }
         default:
-          return;
+          break;
       }
-
-      camera.position.copy(newPos);
-      camera.lookAt(0, 0, 0);
-      if (controls) {
-        controls.target.set(0, 0, 0);
-        controls.update();
-      }
-    };
+      
+      controlsRef.current.target.copy(
+        camera.position.clone().add(cameraDirection)
+      );
+    }, [controlsRef]);
 
     useEffect(() => {
       if (canvasRef?.current) {
@@ -576,39 +704,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     return null;
   };
 
-    
-    
-    
-      
-
-    
-
-  const changeCameraAngle = () => {
-    if (!canvasRef.current?.moveCamera) return;
-    canvasRef.current.moveCamera("reset");
-  };
-  
-  
-  
-  
-    
-    
-  
-  
-  
-  
-  const btnStyle = {
-    width: "50px",
-    height: "50px",
-    fontSize: "24px",
-    borderRadius: "10px",
-    border: "1px solid #999",
-    backgroundColor: "#f4f4f4",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-    cursor: "pointer",
-  };
-  
-  
   const handleMoveJoystick = ({ x, y }) => {
     const controls = controlsRef.current;
     if (!controls || !controls.object) return;
@@ -624,8 +719,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     controls.update();
   };
   
-  
-
   const handleRotateJoystick = ({ x, y }) => {
     const controls = controlsRef.current;
     if (!controls || !controls.target || !controls.object) {
@@ -659,14 +752,6 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     controls.update();
   };
   
-  
-  
-  
-  
-  
-  
-  
-  
   return (
     <>
      
@@ -682,146 +767,122 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
 
 
 
-<Canvas shadows 
-gl={{ antialias: true }} 
-ref={canvasRef}
-style={{ background: "#ccefff" }}
+<Canvas 
+  shadows
+  gl={{ 
+    antialias: true, 
+    alpha: false,
+    powerPreference: "high-performance",
+    depth: true,
+    stencil: false,
+    preserveDrawingBuffer: true
+  }} 
+  camera={{ fov: 45, near: 0.1, far: 2000 }}
+  ref={canvasRef}
+  style={{ background: "#E3F2FD" }} // Very light sky blue
+  dpr={[1, 2]} // Responsive pixel ratio
 >
-<Sky sunPosition={[100, 20, 100]} />
+  {/* Ultra simplified sky settings */}
+  <Sky 
+    distance={450000}
+    sunPosition={[0, 1, 0]} // Sun directly overhead
+    inclination={0.6}
+    azimuth={0.25}
+    rayleigh={0.1} // Lower for more uniform blue
+    turbidity={0.1} // Very clear sky
+    mieCoefficient={0.0005}
+    mieDirectionalG={0.5}
+    exposure={1.0}
+  />
+
+  {/* Minimal fog for clean look */}
+  <fog attach="fog" args={['#E3F2FD', 500, 2000]} />
 
   <Controls controlsRef={controlsRef} />
   <CameraControls
-  controlsRef={controlsRef}
-  canvasRef={canvasRef}
-  walls={snappedWalls}
-/>
-
-
+    controlsRef={controlsRef}
+    canvasRef={canvasRef}
+    walls={snappedWalls}
+  />
 
   <Lighting />
+  
+  {/* Floor and terrain features */}
+  <Floor type="GRASS" />
+  <TerrainFeatures />
+  <Ceiling />
+  
+  {/* Wall rendering */}
   <Scene walls={snappedWalls} is3DMode={is3DMode} />
 
-  <Grid
-    args={[100, 100]}
-    position={[0, 0, 0]}
-    cellSize={1}
-    cellThickness={0.5}
-    cellColor="#8f8f8f"
-    sectionSize={5}
-    sectionThickness={1}
-    sectionColor="#bfbfbf"
-    fadeDistance={50}
-    fadeStrength={1}
-  />
-  
-
+  {/* Render structures (furniture, etc.) */}
   {structures.map((structure, i) => {
-  if (
-    !structure || 
-    !structure.type || 
-    typeof structure.width !== "number" || 
-    typeof structure.height !== "number" || 
-    structure.width <= 0 || 
-    structure.height <= 0
-  ) {
-    console.warn(`🚫 Skipping invalid structure [${i}]:`, structure);
-    return null;
-  }
-
-  console.log(`🧩 Structure #${i}:`, structure);
-
-  switch (structure.type) {
-    case "window":
-      return (
-        <Window
-  key={i}
-  position={[structure.x, 15, -structure.y]} 
-  size={{ width: structure.width, height: structure.height }}
-  rotation={[0, 0, 0]}
-/> // ✅ Correct!
-
-      );
-    case "door":
-      return <Door key={i} {...structure} />;
-    default:
+    if (
+      !structure || 
+      !structure.type || 
+      typeof structure.width !== "number" || 
+      typeof structure.height !== "number" || 
+      structure.width <= 0 || 
+      structure.height <= 0
+    ) {
       return null;
-  }
-})}
+    }
 
-{structures.map((structure, i) => {
-  if (
-    !structure || 
-    !structure.type || 
-    structure.width === 0 || 
-    structure.height === 0
-  ) {
-    console.warn(`🚫 Skipping invalid structure [${i}]:`, structure);
-    return null;
-  }
-
-  console.log(`🧩 Structure #${i}:`, structure);
-
-  switch (structure.type) {
-    case "window":
-  if (structure.width && structure.height) {
-    return (
-      <Window
-        key={i}
-        position={[structure.x, 15, -structure.y]} 
-        size={{ width: structure.width, height: structure.height }}
-        rotation={[0, 0, 0]} 
-      />
-    );
-  } else {
+    switch (structure.type) {
+      case "window":
+        return (
+          <Window
+            key={i}
+            position={[structure.x, 15, -structure.y]} 
+            size={{ width: structure.width, height: structure.height }}
+            rotation={[0, 0, 0]}
+          />
+        );
+      case "door":
+        return <Door key={i} {...structure} />;
+      case "table":
+        return (
+          <group key={i} position={[structure.x, 0, -structure.y]}>
+            {/* Table top */}
+            <mesh position={[0, 15, 0]} castShadow receiveShadow>
+              <boxGeometry args={[structure.width, 2, structure.height]} />
+              <meshStandardMaterial {...MATERIALS.FURNITURE_TABLE} />
+            </mesh>
+            {/* Table legs */}
+            <mesh position={[structure.width/2 - 5, 7.5, structure.height/2 - 5]} castShadow>
+              <boxGeometry args={[3, 15, 3]} />
+              <meshStandardMaterial {...MATERIALS.FURNITURE_TABLE} />
+            </mesh>
+            <mesh position={[structure.width/2 - 5, 7.5, -structure.height/2 + 5]} castShadow>
+              <boxGeometry args={[3, 15, 3]} />
+              <meshStandardMaterial {...MATERIALS.FURNITURE_TABLE} />
+            </mesh>
+            <mesh position={[-structure.width/2 + 5, 7.5, structure.height/2 - 5]} castShadow>
+              <boxGeometry args={[3, 15, 3]} />
+              <meshStandardMaterial {...MATERIALS.FURNITURE_TABLE} />
+            </mesh>
+            <mesh position={[-structure.width/2 + 5, 7.5, -structure.height/2 + 5]} castShadow>
+              <boxGeometry args={[3, 15, 3]} />
+              <meshStandardMaterial {...MATERIALS.FURNITURE_TABLE} />
+            </mesh>
+          </group>
+        );
+      // Add other structure cases as needed
+      default:
         return null;
-      }
-    case "door":
-      return <Door key={i} {...structure} />;
-    default:
-      return null;
-  }
-})}
+    }
+  })}
 
-
-{structures.map((structure, i) => {
-  if (!structure || !structure.type || structure.width <= 0 || structure.height <= 0) {
-    return null;
-  }
-
-  switch (structure.type) {
-    case "window":
-      return (
-        <Window
-          key={i}
-          position={[structure.x, 15, -structure.y]}
-          size={{ width: structure.width, height: structure.height }}
-          rotation={[0, 0, 0]}
-        />
-      );
-    case "door":
-      return <Door key={i} {...structure} />;
-    default:
-      return null;
-  }
-})}
-
-
-
-
-
-
-
-<Measurements walls={snappedWalls} />
-
-  <Scene walls={moves} is3DMode={is3DMode} />
+  {/* Don't need multiple Scene components */}
+  <Measurements walls={snappedWalls} />
+  
+  {/* Walkthrough camera */}
   <CameraPathPreview
-  pathPoints={walkThroughPath}
-  enabled={previewMode}
-  speed={0.5}
-  onEnd={() => setPreviewMode(false)}
-/>
-
-
+    pathPoints={walkThroughPath}
+    enabled={previewMode}
+    speed={0.5}
+    onEnd={() => setPreviewMode(false)}
+  />
 </Canvas>
 
 {is3DMode && (
@@ -859,5 +920,45 @@ style={{ background: "#ccefff" }}
     </>
   );
 };
+
+// Add Floor and Ceiling component definitions
+const Floor = ({ type = "GRASS" }) => {
+  return (
+    <group>
+      {/* Main flat grass ground - lighter color */}
+      <mesh position={[0, 0, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[3000, 3000]} />
+        <meshStandardMaterial 
+          color="#C5E1A5"
+          roughness={0.8}
+          metalness={0.0}
+        />
+      </mesh>
+      
+      {/* Grid pattern - subtle lines */}
+      <mesh position={[0, 0.05, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[3000, 3000, 100, 100]} />
+        <meshStandardMaterial 
+          color="#C5E1A5"
+          wireframe={true}
+          opacity={0.2}
+          transparent={true}
+        />
+      </mesh>
+    </group>
+  );
+};
+
+const Ceiling = () => (
+  <group>
+    {/* Main ceiling - clean white surface */}
+    <mesh position={[0, 30, 0]}>
+      <boxGeometry args={[1000, 0.5, 1000]} />
+      <meshBasicMaterial 
+        color="#ffffff"
+      />
+    </mesh>
+  </group>
+);
 
 export default memo(ThreeDCanvas);

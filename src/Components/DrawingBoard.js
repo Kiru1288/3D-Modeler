@@ -203,6 +203,18 @@ useEffect(() => {
     { id: 'room', icon: '🏠', label: 'Room', action: () => handleToolSelect('room') },
     { id: 'door', icon: '🚪', label: 'Door', action: () => handleToolSelect('door') },
     { id: 'window', icon: '🪟', label: 'Window', action: () => handleToolSelect('window') },
+    { id: 'table', icon: '🪑', label: 'Table', action: () => handleToolSelect('table') },
+    { id: 'sofa', icon: '🛋️', label: 'Sofa', action: () => handleToolSelect('sofa') },
+    { id: 'bed', icon: '🛏️', label: 'Bed', action: () => handleToolSelect('bed') },
+    { id: 'chair', icon: '💺', label: 'Chair', action: () => handleToolSelect('chair') },
+    { id: 'kitchen', icon: '🍳', label: 'Kitchen', action: () => handleToolSelect('kitchen') },
+    { id: 'bath', icon: '🛁', label: 'Bath', action: () => handleToolSelect('bath') },
+    { id: 'toilet', icon: '🚽', label: 'Toilet', action: () => handleToolSelect('toilet') },
+    { id: 'plant', icon: '🪴', label: 'Plant', action: () => handleToolSelect('plant') },
+    { id: 'stairs', icon: '🪜', label: 'Stairs', action: () => handleToolSelect('stairs') },
+    { id: 'carpet', icon: '🧶', label: 'Carpet', action: () => handleToolSelect('carpet') },
+    { id: 'tiles', icon: '🔲', label: 'Tiles', action: () => handleToolSelect('tiles') },
+    { id: 'lamp', icon: '💡', label: 'Lamp', action: () => handleToolSelect('lamp') },
   ];
   
   
@@ -231,8 +243,19 @@ useEffect(() => {
         y2: snappedOrConnected.y,
       });
       console.log(`Started drawing ${currentTool}`);
+    } else if (["table", "sofa", "bed", "chair", "kitchen", "bath", "toilet", "plant", "stairs", "carpet", "tiles", "lamp"].includes(currentTool)) {
+      // For furniture and decor items, add them directly at the clicked position
+      addStructure({
+        type: currentTool,
+        x: snappedOrConnected.x,
+        y: snappedOrConnected.y,
+        width: getDefaultWidth(currentTool),
+        height: getDefaultHeight(currentTool),
+        rotation: 0
+      });
+      console.log(`Added ${currentTool} at position:`, snappedOrConnected);
     }
-  }, [currentTool, walls]);
+  }, [currentTool, walls, addStructure]);
      
 
   const findNearbyEndpoint = (x, y, walls) => {
@@ -441,10 +464,265 @@ const getWallLength = (wall) => {
             closed
           />
         );
+
+      case 'table':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#8B4513" // brown
+            strokeWidth={2}
+            closed
+            fill="#A0522D" // sienna
+          />
+        );
+
+      case 'sofa':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#D2691E" // chocolate
+            strokeWidth={2}
+            closed
+            fill="#D2691E" // chocolate
+          />
+        );
+
+      case 'bed':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#8B4513" // brown
+            strokeWidth={2}
+            closed
+            fill="#CD853F" // peru
+          />
+        );
+
+      case 'chair':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#A0522D" // sienna
+            strokeWidth={2}
+            closed
+            fill="#A0522D" // sienna
+          />
+        );
+
+      case 'kitchen':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#808080" // grey
+            strokeWidth={2}
+            closed
+            fill="#C0C0C0" // silver
+          />
+        );
+
+      case 'bath':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#ADD8E6" // light blue
+            strokeWidth={2}
+            closed
+            fill="#ADD8E6" // light blue
+          />
+        );
+
+      case 'toilet':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#FFFFFF" // white
+            strokeWidth={2}
+            closed
+            fill="#F0F0F0" // off-white
+          />
+        );
+
+      case 'plant':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#228B22" // forest green
+            strokeWidth={2}
+            closed
+            fill="#32CD32" // lime green
+          />
+        );
+
+      case 'stairs':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#8B4513" // brown
+            strokeWidth={2}
+            closed
+            fill="#D2B48C" // tan
+          />
+        );
+
+      case 'carpet':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#800080" // purple
+            strokeWidth={1}
+            closed
+            fill="#DDA0DD" // plum
+          />
+        );
+
+      case 'tiles':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#A9A9A9" // dark grey
+            strokeWidth={1}
+            closed
+            fill="#D3D3D3" // light grey
+          />
+        );
+
+      case 'lamp':
+        return (
+          <Line
+            key={structure.id}
+            points={[
+              structure.x, structure.y,
+              structure.x + structure.width, structure.y,
+              structure.x + structure.width, structure.y + structure.height,
+              structure.x, structure.y + structure.height,
+              structure.x, structure.y
+            ]}
+            stroke="#FFD700" // gold
+            strokeWidth={2}
+            closed
+            fill="#FFFFE0" // light yellow
+          />
+        );
+
       default:
         return null;
     }
   }, [darkMode]);
+
+  // Helper function to get default width based on element type
+  const getDefaultWidth = (type) => {
+    switch(type) {
+      case 'table': return 60;
+      case 'sofa': return 80;
+      case 'bed': return 100;
+      case 'chair': return 40;
+      case 'kitchen': return 120;
+      case 'bath': return 80;
+      case 'toilet': return 40;
+      case 'plant': return 30;
+      case 'stairs': return 80;
+      case 'carpet': return 100;
+      case 'tiles': return 100;
+      case 'lamp': return 30;
+      default: return 50;
+    }
+  };
+
+  // Helper function to get default height based on element type
+  const getDefaultHeight = (type) => {
+    switch(type) {
+      case 'table': return 60;
+      case 'sofa': return 40;
+      case 'bed': return 80;
+      case 'chair': return 40;
+      case 'kitchen': return 60;
+      case 'bath': return 50;
+      case 'toilet': return 40;
+      case 'plant': return 30;
+      case 'stairs': return 120;
+      case 'carpet': return 100;
+      case 'tiles': return 100;
+      case 'lamp': return 30;
+      default: return 50;
+    }
+  };
 
   // ---------------------------
   // Render JSX

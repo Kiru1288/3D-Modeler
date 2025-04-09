@@ -1,23 +1,12 @@
 // src/context/FloorPlanContext.js
-import React, { createContext, useState, useEffect } from 'react';
-import { produce } from "immer";
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { openDB } from 'idb';
 
-export const FloorPlanContext = createContext({
-  walls: [],
-  structures: [],
-  addWall: () => {},
-  removeWall: () => {},
-  addStructure: () => {},
-  removeStructure: () => {},
-  undo: () => {},
-  resetWalls: () => {},
-  resetStructures: () => {},
-});
+export const FloorPlanContext = createContext();
 
-
-export function FloorPlanProvider({ children }) {
-  const [state, setState] = useState({ walls: [], structures: [] });
+export const FloorPlanProvider = ({ children }) => {
+  const [walls, setWalls] = useState([]);
+  const [structures, setStructures] = useState([]);
   const [db, setDb] = useState(null);
 
   useEffect(() => {
@@ -36,7 +25,7 @@ export function FloorPlanProvider({ children }) {
 
   const saveStateToDB = async () => {
     if (db) {
-      await db.add('history', { walls: state.walls, structures: state.structures });
+      await db.add('history', { walls: walls, structures: structures });
     }
   };
 
@@ -47,68 +36,93 @@ export function FloorPlanProvider({ children }) {
     const allStates = await store.getAll();
 
     if (allStates.length > 1) {
-      setState(allStates[allStates.length - 2]);
+      setWalls(allStates[allStates.length - 2].walls);
+      setStructures(allStates[allStates.length - 2].structures);
       await db.delete('history', allStates[allStates.length - 1].id);
     }
   };
 
-  const addWall = (newWall) => {
-    const nextState = produce(state, (draft) => {
-      draft.walls = Array.isArray(newWall) ? newWall : [...draft.walls, newWall];
-    });
-    setState(nextState);
-    if (db) db.add('history', { walls: nextState.walls, structures: nextState.structures });
-  };
+  const addWall = useCallback((wall) => {
+    const wallWithType = { ...wall, type: wall.type || 'brick' };
+    setWalls(prev => [...prev, wallWithType]);
+    if (db) db.add('history', { walls: [...walls, wallWithType], structures: structures });
+  }, [db]);
 
-  const addStructure = (newStructure) => {
-    const nextState = produce(state, (draft) => {
-      draft.structures = Array.isArray(newStructure) ? newStructure : [...draft.structures, newStructure];
-    });
-    setState(nextState);
-    if (db) db.add('history', { walls: nextState.walls, structures: nextState.structures });
-  };
+  const addStructure = useCallback((structure) => {
+    const id = `structure-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    let defaults = { depth: 2 };
+    
+    switch(structure.type) {
+      case 'table':
+        defaults = { height: 30, depth: 5 };
+        break;
+      case 'sofa':
+        defaults = { height: 40, depth: 15 };
+        break;
+      case 'bed':
+        defaults = { height: 50, depth: 10 };
+        break;
+      case 'door':
+        defaults = { material: 'wood', doorType: 'hinged' };
+        break;
+      case 'window':
+        defaults = { material: 'glass', windowType: 'casement' };
+        break;
+      default:
+        break;
+    }
+    
+    const structureWithDefaults = { 
+      ...defaults, 
+      ...structure, 
+      id 
+    };
+    
+    setStructures(prev => [...prev, structureWithDefaults]);
+    if (db) db.add('history', { walls: walls, structures: [...structures, structureWithDefaults] });
+  }, [db, walls, structures]);
 
   const removeWall = (wallId) => {
-    setState(produce((draft) => {
-      draft.walls = draft.walls.filter(wall => wall.id !== wallId);
-    }));
+    setWalls(prev => prev.filter(wall => wall.id !== wallId));
     saveStateToDB();
   };
 
   const removeStructure = (structureId) => {
-    setState(produce((draft) => {
-      draft.structures = draft.structures.filter(structure => structure.id !== structureId);
-    }));
+    setStructures(prev => prev.filter(structure => structure.id !== structureId));
     saveStateToDB();
   };
 
-  // ✅ Define resetWalls and resetStructures here
-  const resetWalls = (newWalls) => {
-    setState(produce((draft) => {
-      draft.walls = newWalls;
+  const resetWalls = useCallback((newWalls) => {
+    const wallsWithTypes = newWalls.map(wall => ({
+      ...wall,
+      type: wall.type || 'brick'
     }));
-  };
+    setWalls(wallsWithTypes);
+    if (db) db.add('history', { walls: wallsWithTypes, structures: structures });
+  }, [db, structures]);
 
-  const resetStructures = (newStructures) => {
-    setState(produce((draft) => {
-      draft.structures = newStructures;
-    }));
-  };
+  const resetStructures = useCallback((newStructures) => {
+    setStructures(newStructures);
+    if (db) db.add('history', { walls: walls, structures: newStructures });
+  }, [db, walls]);
 
   return (
-    <FloorPlanContext.Provider value={{
-      walls: state.walls,
-      structures: state.structures,
-      addWall,
-      removeWall,
-      addStructure,
-      removeStructure,
-      undo,
-      resetWalls,           // ✅ Expose here
-      resetStructures       // ✅ Expose here
-    }}>
+    <FloorPlanContext.Provider
+      value={{
+        walls,
+        structures,
+        addWall,
+        removeWall,
+        addStructure,
+        removeStructure,
+        undo,
+        resetWalls,
+        resetStructures
+      }}
+    >
       {children}
     </FloorPlanContext.Provider>
   );
-}
+};
 

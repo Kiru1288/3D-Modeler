@@ -250,6 +250,9 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+  margin-top: 15px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .element-btn {
