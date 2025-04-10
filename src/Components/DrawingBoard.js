@@ -55,21 +55,21 @@ function DrawingBoard() {
   const addToHistory = useCallback(() => {
     setHistory((prevHistory) => {
       const newState = { walls: [...walls], structures: [...structures] };
-  
+
       if (
         prevHistory.length > 0 &&
         JSON.stringify(prevHistory[historyIndex]) === JSON.stringify(newState)
       ) {
         return prevHistory;
       }
-  
+
       const updated = prevHistory.slice(0, historyIndex + 1);
       updated.push(newState);
       return updated;
     });
-  
+
     setHistoryIndex((prev) => prev + 1);
-  }, [walls, structures, historyIndex]);
+  }, [walls, structures]);
   
   
     
@@ -138,11 +138,16 @@ useEffect(() => {
 
 
   // Record history whenever walls or structures change
+  const lastStateRef = React.useRef(null);
+  
   useEffect(() => {
-    if (historyIndex === 0 || JSON.stringify(history[historyIndex]) !== JSON.stringify({ walls, structures })) {
+    const currentState = JSON.stringify({ walls, structures });
+  
+    if (lastStateRef.current !== currentState) {
+      lastStateRef.current = currentState;
       addToHistory();
     }
-  }, [walls, structures, addToHistory, history, historyIndex]);
+  }, [walls, structures, addToHistory]);
   
 
   // ---------------------------

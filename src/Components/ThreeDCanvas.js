@@ -287,14 +287,14 @@ const TerrainFeatures = () => {
 // -----------------------
 // New Scene Component
 // -----------------------
-const Scene = ({ walls = [], is3DMode }) => {
+const Scene = ({ walls = [], is3DMode, previewMode }) => {
   const cameraProps = is3DMode
     ? { position: [0, 250, 250], fov: 60 }
     : { position: [0, 1000, 0], fov: 50 };
 
   return (
     <>
-      <PerspectiveCamera makeDefault {...cameraProps} />
+      
 
       <OrbitControls
         enableDamping
@@ -341,41 +341,37 @@ const Scene = ({ walls = [], is3DMode }) => {
             }
             
             return (
-              <Wall 
-                key={i} 
-                {...wall} 
-                height={40} 
-                thickness={5}
-                type={wall.type || 'brick'}
-                material={wallMaterial}
-              />
+              <>
+                {console.log(`🧱 Wall ${i}: (${wall.x1}, ${wall.y1}) to (${wall.x2}, ${wall.y2})`)}
+                <Wall 
+                  key={i} 
+                  {...wall} 
+                  height={40} 
+                  thickness={5}
+                  type={wall.type || 'brick'}
+                  material={wallMaterial}
+                />
+              </>
             );
+            
           })
-        ) : (
-          // Render sample walls if none provided
-          <>
-            <Wall x1={-200} y1={-200} x2={200} y2={-200} height={40} thickness={5} type="brick" />
-            <Wall x1={200} y1={-200} x2={200} y2={200} height={40} thickness={5} type="brick" />
-            <Wall x1={200} y1={200} x2={-200} y2={200} height={40} thickness={5} type="brick" />
-            <Wall x1={-200} y1={200} x2={-200} y2={-200} height={40} thickness={5} type="brick" />
-          </>
-        )}
+        ) : null}
+       
       </group>
     </>
   );
 };
 
-const Controls = ({ controlsRef }) => {
+const Controls = ({ controlsRef, previewMode }) => {
   const { camera, gl } = useThree();
 
   return (
     <OrbitControls
       ref={(ref) => {
-        if (ref) {
-          controlsRef.current = ref;
-        }
+        if (ref) controlsRef.current = ref;
       }}
       args={[camera, gl.domElement]}
+      enabled={!previewMode} // 🔥 disable during walkthrough
       enableDamping
       dampingFactor={0.05}
       panSpeed={1.5}
@@ -448,38 +444,90 @@ const Measurements = ({ walls }) => {
     });
 };
 
-const CameraPathPreview = ({ pathPoints = [], enabled, speed = 0.5, onEnd }) => {
-  const ref = useRef();
+const CameraPathPreview = ({ pathPoints = [], enabled, speed = 2, onEnd, controlsRef }) => {
+  const { set, camera } = useThree();
   const currentIndex = useRef(0);
+  const progress = useRef(0);
+  const walkthroughCamera = useRef();
 
-  useFrame(() => {
-    if (!enabled || pathPoints.length < 2 || !ref.current) return;
+  useEffect(() => {
+    if (enabled && pathPoints.length > 1) {
+      currentIndex.current = 0;
+      progress.current = 0;
 
-    const current = pathPoints[currentIndex.current];
-    const next = pathPoints[(currentIndex.current + 1) % pathPoints.length];
+      const start = pathPoints[0];
+      walkthroughCamera.current?.position.set(...start);
 
-    const cam = ref.current;
-    cam.position.lerp(
-      new THREE.Vector3(current[0], current[1], current[2]),
-      speed * 0.1
-    );
-    cam.lookAt(next[0], next[1], next[2]);
+      // Set camera as default
+      if (walkthroughCamera.current) {
+        set({ camera: walkthroughCamera.current });
+        walkthroughCamera.current.lookAt(...pathPoints[1]);
 
-    const dist = cam.position.distanceTo(new THREE.Vector3(...current));
-    if (dist < 1) {
-      currentIndex.current += 1;
-      if (currentIndex.current >= pathPoints.length - 1) {
-        currentIndex.current = 0;
-        if (onEnd) onEnd();
+        if (controlsRef?.current) {
+          controlsRef.current.object = walkthroughCamera.current;
+          controlsRef.current.target.set(...pathPoints[1]);
+          controlsRef.current.update();
+        }
       }
+    }
+  }, [enabled, pathPoints, controlsRef, set]);
+
+  useFrame((_, delta) => {
+    if (!enabled || pathPoints.length < 2) return;
+
+    const cam = walkthroughCamera.current;
+    if (!cam) return;
+
+    const i = currentIndex.current;
+    if (i >= pathPoints.length - 1) {
+      onEnd?.();
+      return;
+    }
+
+    const from = new THREE.Vector3(...pathPoints[i]);
+    const to = new THREE.Vector3(...pathPoints[i + 1]);
+
+    const direction = new THREE.Vector3().subVectors(to, from).normalize();
+    const distance = from.distanceTo(to);
+    const step = speed * delta;
+    progress.current += step / distance;
+
+    if (progress.current >= 1) {
+      currentIndex.current++;
+      progress.current = 0;
+      return;
+    }
+
+    const newPos = new THREE.Vector3().lerpVectors(from, to, progress.current);
+    cam.position.copy(newPos);
+
+    const lookAt = new THREE.Vector3().addVectors(newPos, direction);
+    cam.lookAt(lookAt);
+
+    if (controlsRef?.current) {
+      controlsRef.current.target.copy(lookAt);
+      controlsRef.current.update();
     }
   });
 
   return (
-    <PerspectiveCamera ref={ref} makeDefault position={[0, 5, 0]} fov={75} />
+    <PerspectiveCamera
+      ref={walkthroughCamera}
+      makeDefault
+      fov={60}
+      position={[0, 10, 0]} // This will be replaced on mount
+    />
   );
 };
 
+
+
+
+  
+  
+  
+
+  
 const snapWalls = (walls, threshold = 10) => {
   if (!walls || walls.length === 0) {
     return [];
@@ -551,12 +599,8 @@ const snapWalls = (walls, threshold = 10) => {
 // -----------------------
 const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => {
   // Create sample walls if none provided
-  const effectiveWalls = walls.length > 0 ? walls : [
-    { id: 'sample1', x1: -200, y1: -200, x2: 200, y2: -200, type: 'brick' },
-    { id: 'sample2', x1: 200, y1: -200, x2: 200, y2: 200, type: 'brick' },
-    { id: 'sample3', x1: 200, y1: 200, x2: -200, y2: 200, type: 'brick' },
-    { id: 'sample4', x1: -200, y1: 200, x2: -200, y2: -200, type: 'brick' }
-  ];
+  const effectiveWalls = walls.length > 0 ? walls : [];
+
   
   const snappedWalls = snapWalls(effectiveWalls);
   const canvasRef = React.useRef(null);
@@ -566,12 +610,18 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
 
   useEffect(() => {
     const newPath = generateWalkthroughPath(snappedWalls, structures);
+    console.log("🚶 Walkthrough Path:");
+    newPath.forEach((point, index) => {
+      console.log(`   Step ${index + 1}: (${point[0]}, ${point[1]}, ${point[2]})`);
+    });
+  
     setWalkThroughPath((prevPath) => {
       const prevStr = JSON.stringify(prevPath);
       const newStr = JSON.stringify(newPath);
       return prevStr !== newStr ? newPath : prevPath;
     });
   }, [walls, structures, snappedWalls]);
+  
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -605,48 +655,44 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     };
   }, [canvasRef]);
 
-  const generateWalkthroughPath = (walls = [], structures = []) => {
-    if (!walls || walls.length === 0 || !walls[0]) return [];
-
-    const referenceWall = walls[0];
-    if (!referenceWall.x1 || !referenceWall.x2 || !referenceWall.y1 || !referenceWall.y2) return [];
-    
-    const startX = (referenceWall.x1 + referenceWall.x2) / 2;
-    
-    const startZ = (referenceWall.y1 + referenceWall.y2) / 2;
-
-    const dx = referenceWall.x2 - referenceWall.x1;
-    const dz = referenceWall.y2 - referenceWall.y1;
-    const wallLength = Math.hypot(dx, dz);
-    const inwardNormal = [-dz / wallLength, dx / wallLength]; 
-
-    const entryX = startX + inwardNormal[0] * 50;
-    const entryZ = startZ + inwardNormal[1] * 50;
-
-    const xs = walls.flatMap(w => [w.x1, w.x2]);
-    const zs = walls.flatMap(w => [w.y1, w.y2]);
-
-    const minX = Math.min(...xs) + 50;
-    const maxX = Math.max(...xs) - 50;
-    const minZ = Math.min(...zs) + 50;
-    const maxZ = Math.max(...zs) - 50;
-
-    const path = [[entryX, 10, -entryZ]];
-    const spacing = 100;
-    let forward = true;
-
-    for (let z = minZ; z <= maxZ; z += spacing) {
-      const row = [];
-      for (let x = minX; x <= maxX; x += spacing) {
-        row.push([x, 10, -z]); 
+  const generateWalkthroughPath = (walls = []) => {
+    if (!walls || walls.length === 0) return [];
+  
+    const offset = 20;
+    const stepsPerWall = 10;
+    const points = [];
+  
+    // 1. Compute structure center for normal flipping
+    const allPoints = walls.flatMap(w => [new THREE.Vector2(w.x1, w.y1), new THREE.Vector2(w.x2, w.y2)]);
+    const center = allPoints.reduce((acc, p) => acc.add(p), new THREE.Vector2(0, 0)).divideScalar(allPoints.length);
+  
+    walls.forEach((wall, i) => {
+      const { x1, y1, x2, y2 } = wall;
+      const p1 = new THREE.Vector2(x1, y1);
+      const p2 = new THREE.Vector2(x2, y2);
+      const mid = new THREE.Vector2().addVectors(p1, p2).multiplyScalar(0.5);
+      const dir = new THREE.Vector2().subVectors(p2, p1).normalize();
+      const normal = new THREE.Vector2(-dir.y, dir.x); // perpendicular
+  
+      // Flip normal if pointing outward
+      const toCenter = new THREE.Vector2().subVectors(center, mid);
+      if (normal.dot(toCenter) < 0) {
+        normal.negate();
       }
-      path.push(...(forward ? row : row.reverse()));
-      forward = !forward;
-    }
-
-    return path;
+  
+      // Push multiple points along wall with inward offset
+      for (let t = 0; t <= 1; t += 1 / stepsPerWall) {
+        const interp = new THREE.Vector2().lerpVectors(p1, p2, t);
+        const offsetPoint = interp.add(normal.clone().multiplyScalar(offset));
+        points.push([offsetPoint.x, 10, -offsetPoint.y]);
+      }
+    });
+  
+    return points;
   };
-
+  
+  
+  
   const CameraControls = ({ controlsRef, walls, canvasRef }) => {
     const { camera } = useThree();
     
@@ -793,7 +839,8 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
         {/* Very minimal fog */}
         <fog attach="fog" args={['#b3d9ff', 1500, 4000]} />
 
-        <Controls controlsRef={controlsRef} />
+        <Controls controlsRef={controlsRef} previewMode={previewMode} />
+
         <CameraControls
           controlsRef={controlsRef}
           canvasRef={canvasRef}
@@ -806,7 +853,7 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
         <Floor type="GRASS" />
         
         {/* Render walls */}
-        <Scene walls={snappedWalls} is3DMode={is3DMode} />
+        <Scene walls={snappedWalls} is3DMode={is3DMode} previewMode={previewMode} />
 
         {/* Render structures */}
         {structures.map((structure, i) => {
@@ -941,12 +988,20 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
         <Measurements walls={snappedWalls} />
         
         {/* Walkthrough camera */}
-        <CameraPathPreview
-          pathPoints={walkThroughPath}
-          enabled={previewMode}
-          speed={0.5}
-          onEnd={() => setPreviewMode(false)}
-        />
+        {previewMode ? (
+  <CameraPathPreview
+    pathPoints={walkThroughPath}
+    enabled={previewMode}
+    speed={45}
+    controlsRef={controlsRef}
+    onEnd={() => setPreviewMode(false)}
+  />
+) : (
+  <PerspectiveCamera makeDefault position={[0, 250, 250]} fov={60} />
+)}
+
+
+
       </Canvas>
 
       {is3DMode && (
