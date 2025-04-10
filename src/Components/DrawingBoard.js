@@ -193,31 +193,172 @@ useEffect(() => {
   // Toolbar and Element Buttons
   // ---------------------------
 
+  // Categorized element buttons for better organization
+  const [activeCategory, setActiveCategory] = useState('walls');
   
-  
-  
-  
-
-  const elementButtons = [
-    { id: 'wall', icon: '🧱', label: 'Wall', action: () => handleToolSelect('wall') },
-    { id: 'room', icon: '🏠', label: 'Room', action: () => handleToolSelect('room') },
-    { id: 'door', icon: '🚪', label: 'Door', action: () => handleToolSelect('door') },
-    { id: 'window', icon: '🪟', label: 'Window', action: () => handleToolSelect('window') },
-    { id: 'table', icon: '🪑', label: 'Table', action: () => handleToolSelect('table') },
-    { id: 'sofa', icon: '🛋️', label: 'Sofa', action: () => handleToolSelect('sofa') },
-    { id: 'bed', icon: '🛏️', label: 'Bed', action: () => handleToolSelect('bed') },
-    { id: 'chair', icon: '💺', label: 'Chair', action: () => handleToolSelect('chair') },
-    { id: 'kitchen', icon: '🍳', label: 'Kitchen', action: () => handleToolSelect('kitchen') },
-    { id: 'bath', icon: '🛁', label: 'Bath', action: () => handleToolSelect('bath') },
-    { id: 'toilet', icon: '🚽', label: 'Toilet', action: () => handleToolSelect('toilet') },
-    { id: 'plant', icon: '🪴', label: 'Plant', action: () => handleToolSelect('plant') },
-    { id: 'stairs', icon: '🪜', label: 'Stairs', action: () => handleToolSelect('stairs') },
-    { id: 'carpet', icon: '🧶', label: 'Carpet', action: () => handleToolSelect('carpet') },
-    { id: 'tiles', icon: '🔲', label: 'Tiles', action: () => handleToolSelect('tiles') },
-    { id: 'lamp', icon: '💡', label: 'Lamp', action: () => handleToolSelect('lamp') },
+  const elementCategories = [
+    { id: 'walls', label: 'Walls & Structure', icon: '📐' },
+    { id: 'doors', label: 'Doors & Windows', icon: '🚪' },
+    { id: 'furniture', label: 'Furniture', icon: '🛋️' },
+    { id: 'kitchen', label: 'Kitchen & Bath', icon: '🔪' },
+    { id: 'fixtures', label: 'Fixtures & Decor', icon: '💡' },
+    { id: 'outdoor', label: 'Outdoor', icon: '🌳' }
   ];
+
+  const categorizedElements = {
+    // Walls & Structural elements
+    walls: [
+      { id: 'wall', icon: '🧊', label: 'Wall', action: () => handleToolSelect('wall') },
+      { id: 'room', icon: '🏛️', label: 'Room', action: () => handleToolSelect('room') },
+      { id: 'column', icon: '🏛️', label: 'Column', action: () => handleToolSelect('column') },
+      { id: 'beam', icon: '📏', label: 'Beam', action: () => handleToolSelect('beam') },
+      { id: 'stairs', icon: '📶', label: 'Stairs', action: () => handleToolSelect('stairs') },
+      { id: 'railing', icon: '🔄', label: 'Railing', action: () => handleToolSelect('railing') },
+      { id: 'ceiling', icon: '⬜', label: 'Ceiling', action: () => handleToolSelect('ceiling') },
+    ],
+    
+    // Doors & Windows
+    doors: [
+      { id: 'door', icon: '🚪', label: 'Door', action: () => handleToolSelect('door') },
+      { id: 'sliding-door', icon: '↔️', label: 'Sliding Door', action: () => handleToolSelect('sliding-door') },
+      { id: 'french-door', icon: '🚪', label: 'French Door', action: () => handleToolSelect('french-door') },
+      { id: 'window', icon: '🪟', label: 'Window', action: () => handleToolSelect('window') },
+      { id: 'bay-window', icon: '🏙️', label: 'Bay Window', action: () => handleToolSelect('bay-window') },
+      { id: 'skylight', icon: '☀️', label: 'Skylight', action: () => handleToolSelect('skylight') },
+    ],
+    
+    // Furniture
+    furniture: [
+      { id: 'sofa', icon: '🛋️', label: 'Sofa', action: () => handleToolSelect('sofa') },
+      { id: 'sectional', icon: '🔄', label: 'L-Sectional', action: () => handleToolSelect('sectional') },
+      { id: 'bed', icon: '🛏️', label: 'Bed', action: () => handleToolSelect('bed') },
+      { id: 'table', icon: '🎲', label: 'Table', action: () => handleToolSelect('table') },
+      { id: 'desk', icon: '💻', label: 'Desk', action: () => handleToolSelect('desk') },
+      { id: 'chair', icon: '🪑', label: 'Chair', action: () => handleToolSelect('chair') },
+      { id: 'bookshelf', icon: '📚', label: 'Bookshelf', action: () => handleToolSelect('bookshelf') },
+      { id: 'wardrobe', icon: '👕', label: 'Wardrobe', action: () => handleToolSelect('wardrobe') },
+      { id: 'dresser', icon: '🧳', label: 'Dresser', action: () => handleToolSelect('dresser') },
+      { id: 'nightstand', icon: '📖', label: 'Nightstand', action: () => handleToolSelect('nightstand') },
+    ],
+    
+    // Kitchen & Bath
+    kitchen: [
+      { id: 'kitchen', icon: '🍽️', label: 'Kitchen', action: () => handleToolSelect('kitchen') },
+      { id: 'stove', icon: '🔥', label: 'Stove', action: () => handleToolSelect('stove') },
+      { id: 'refrigerator', icon: '❄️', label: 'Refrigerator', action: () => handleToolSelect('refrigerator') },
+      { id: 'kitchen-island', icon: '⬜', label: 'Island', action: () => handleToolSelect('kitchen-island') },
+      { id: 'counter', icon: '📏', label: 'Counter', action: () => handleToolSelect('counter') },
+      { id: 'cabinet', icon: '🗄️', label: 'Cabinet', action: () => handleToolSelect('cabinet') },
+      { id: 'sink', icon: '💧', label: 'Sink', action: () => handleToolSelect('sink') },
+      { id: 'bath', icon: '🛀', label: 'Bath', action: () => handleToolSelect('bath') },
+      { id: 'shower', icon: '🚿', label: 'Shower', action: () => handleToolSelect('shower') },
+      { id: 'toilet', icon: '🚽', label: 'Toilet', action: () => handleToolSelect('toilet') },
+      { id: 'vanity', icon: '🪞', label: 'Vanity', action: () => handleToolSelect('vanity') },
+    ],
+    
+    // Fixtures & Decor
+    fixtures: [
+      { id: 'lamp', icon: '💡', label: 'Lamp', action: () => handleToolSelect('lamp') },
+      { id: 'ceiling-light', icon: '☀️', label: 'Ceiling Light', action: () => handleToolSelect('ceiling-light') },
+      { id: 'chandelier', icon: '✨', label: 'Chandelier', action: () => handleToolSelect('chandelier') },
+      { id: 'carpet', icon: '📦', label: 'Carpet', action: () => handleToolSelect('carpet') },
+      { id: 'tiles', icon: '🔳', label: 'Tiles', action: () => handleToolSelect('tiles') },
+      { id: 'plant', icon: '🌿', label: 'Plant', action: () => handleToolSelect('plant') },
+      { id: 'artwork', icon: '🖼️', label: 'Artwork', action: () => handleToolSelect('artwork') },
+      { id: 'tv', icon: '📺', label: 'TV', action: () => handleToolSelect('tv') },
+      { id: 'fireplace', icon: '🔥', label: 'Fireplace', action: () => handleToolSelect('fireplace') },
+    ],
+    
+    // Outdoor elements
+    outdoor: [
+      { id: 'deck', icon: '🏕️', label: 'Deck', action: () => handleToolSelect('deck') },
+      { id: 'patio', icon: '⬜', label: 'Patio', action: () => handleToolSelect('patio') },
+      { id: 'pool', icon: '💦', label: 'Pool', action: () => handleToolSelect('pool') },
+      { id: 'garden', icon: '🌱', label: 'Garden', action: () => handleToolSelect('garden') },
+      { id: 'fence', icon: '🔲', label: 'Fence', action: () => handleToolSelect('fence') },
+      { id: 'path', icon: '🛣️', label: 'Path', action: () => handleToolSelect('path') },
+      { id: 'outdoor-furniture', icon: '🪑', label: 'Outdoor Furniture', action: () => handleToolSelect('outdoor-furniture') },
+      { id: 'bbq', icon: '♨️', label: 'BBQ', action: () => handleToolSelect('bbq') },
+    ],
+  };
   
+  // Get currently displayed elements based on active category
+  const currentElements = categorizedElements[activeCategory] || [];
+
+  // Helper function to get default width/height for furniture items
+  const getDefaultWidth = (itemType) => {
+    const defaultSizes = {
+      'wall': 100,
+      'door': 90,
+      'sliding-door': 120,
+      'french-door': 180,
+      'window': 90,
+      'bay-window': 180,
+      'sofa': 200,
+      'sectional': 250,
+      'table': 120,
+      'desk': 150,
+      'bed': 200,
+      'chair': 60,
+      'bookshelf': 100,
+      'kitchen': 240,
+      'stove': 60,
+      'refrigerator': 70,
+      'kitchen-island': 180,
+      'counter': 200,
+      'cabinet': 80,
+      'bath': 170,
+      'shower': 90,
+      'toilet': 60,
+      'vanity': 100,
+      'wardrobe': 120,
+      'dresser': 100,
+      'nightstand': 50,
+      'deck': 400,
+      'patio': 350,
+      'pool': 300,
+      'bbq': 80,
+    };
+    
+    return defaultSizes[itemType] || 100;
+  };
   
+  const getDefaultHeight = (itemType) => {
+    const defaultSizes = {
+      'wall': 20,
+      'door': 210,
+      'sliding-door': 210,
+      'french-door': 210,
+      'window': 120,
+      'bay-window': 120,
+      'sofa': 100,
+      'sectional': 200,
+      'table': 80,
+      'desk': 70,
+      'bed': 200,
+      'chair': 60,
+      'bookshelf': 40,
+      'kitchen': 60,
+      'stove': 60,
+      'refrigerator': 70,
+      'kitchen-island': 100,
+      'counter': 60,
+      'cabinet': 60,
+      'bath': 80,
+      'shower': 90,
+      'toilet': 70,
+      'vanity': 60,
+      'wardrobe': 60,
+      'dresser': 50,
+      'nightstand': 50,
+      'deck': 400,
+      'patio': 350,
+      'pool': 200,
+      'bbq': 60,
+    };
+    
+    return defaultSizes[itemType] || 60;
+  };
 
   // ---------------------------
   // Mouse Event Handlers
@@ -225,8 +366,7 @@ useEffect(() => {
   const handleDrawStart = useCallback((e) => {
     const pos = e.target.getStage().getPointerPosition();
     if (!pos) return;
-    console.log("Mouse down at:", pos);
-  
+    
     const rawSnapped = {
       x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
       y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING,
@@ -234,7 +374,7 @@ useEffect(() => {
   
     const snappedOrConnected = findNearbyEndpoint(rawSnapped.x, rawSnapped.y, walls) || rawSnapped;
   
-    if (["wall", "door", "window", "room"].includes(currentTool)) {
+    if (["wall", "room"].includes(currentTool)) {
       setIsDrawing(true);
       setCurrentLine({
         x1: snappedOrConnected.x,
@@ -243,8 +383,18 @@ useEffect(() => {
         y2: snappedOrConnected.y,
       });
       console.log(`Started drawing ${currentTool}`);
-    } else if (["table", "sofa", "bed", "chair", "kitchen", "bath", "toilet", "plant", "stairs", "carpet", "tiles", "lamp"].includes(currentTool)) {
-      // For furniture and decor items, add them directly at the clicked position
+    } else if (["door", "sliding-door", "french-door", "window", "bay-window", "skylight"].includes(currentTool)) {
+      // For doors and windows, start drawing a line to set dimensions
+      setIsDrawing(true);
+      setCurrentLine({
+        x1: snappedOrConnected.x,
+        y1: snappedOrConnected.y,
+        x2: snappedOrConnected.x,
+        y2: snappedOrConnected.y,
+        type: currentTool
+      });
+    } else {
+      // For all other elements (furniture, fixtures, etc), add directly at click position
       addStructure({
         type: currentTool,
         x: snappedOrConnected.x,
@@ -291,7 +441,6 @@ useEffect(() => {
         y: currentLine.y2
       };
       
-      
       const newElement = {
         id: Date.now(),
         x1: snappedStart.x,
@@ -301,35 +450,44 @@ useEffect(() => {
         type: currentTool
       };
       
-      
       if (snappedEnd.x !== currentLine.x2 || snappedEnd.y !== currentLine.y2) {
         console.log("🔗 Auto-snapped endpoint to:", snappedEnd);
       }
       
-      if (["door", "window"].includes(currentTool)) {
-        
-  
+      if (["door", "sliding-door", "french-door", "window", "bay-window", "skylight"].includes(currentTool)) {
+        // Calculate width, height and position for door/window structures
         const width = Math.abs(currentLine.x2 - currentLine.x1);
-const height = Math.abs(currentLine.y2 - currentLine.y1);
-const x = Math.min(currentLine.x1, currentLine.x2);
-const y = Math.min(currentLine.y1, currentLine.y2);
+        const height = Math.abs(currentLine.y2 - currentLine.y1);
+        const x = Math.min(currentLine.x1, currentLine.x2);
+        const y = Math.min(currentLine.y1, currentLine.y2);
+        
+        // Don't add tiny elements (prevent accidental clicks)
+        if (width < 10 || height < 10) {
+          setIsDrawing(false);
+          setCurrentLine(null);
+          return;
+        }
 
-addStructure({
-  id: Date.now(),
-  x,
-  y,
-  width,
-  height,
-  type: currentTool
-});
-console.log("➕ Added window structure:", { x, y, width, height, type: currentTool });
-
-
-} else if (["wall", "room"].includes(currentTool)) {
-  addWall(newElement);
-
-}
-
+        addStructure({
+          id: Date.now(),
+          x,
+          y,
+          width,
+          height,
+          type: currentTool,
+          // Calculate the rotation based on the line direction
+          rotation: Math.atan2(currentLine.y2 - currentLine.y1, currentLine.x2 - currentLine.x1)
+        });
+        
+      } else if (["wall", "room"].includes(currentTool)) {
+        // Prevent adding zero-length walls
+        if (newElement.x1 === newElement.x2 && newElement.y1 === newElement.y2) {
+          setIsDrawing(false);
+          setCurrentLine(null);
+          return;
+        }
+        addWall(newElement);
+      }
   
       setIsDrawing(false);
       setCurrentLine(null);
@@ -418,42 +576,99 @@ const getWallLength = (wall) => {
   // Render structure based on its type
   const renderStructure = useCallback((structure) => {
     if (!structure) return null;
+    
+    // Common element rendering (rectangular shapes with different colors)
+    const renderRectangular = (stroke, fill) => (
+      <Line
+        key={structure.id}
+        points={[
+          structure.x, structure.y,
+          structure.x + structure.width, structure.y,
+          structure.x + structure.width, structure.y + structure.height,
+          structure.x, structure.y + structure.height,
+          structure.x, structure.y
+        ]}
+        stroke={stroke}
+        strokeWidth={2}
+        closed
+        fill={fill}
+        dash={structure.type && structure.type.includes('dashed') ? [10, 5] : undefined}
+      />
+    );
+    
+    // Structure color mappings
+    const colors = {
+      // Door types
+      'door': { stroke: '#8B4513', fill: '#CD853F' },
+      'sliding-door': { stroke: '#8B4513', fill: '#DAA520' },
+      'french-door': { stroke: '#8B4513', fill: '#B8860B' },
+      
+      // Window types
+      'window': { stroke: '#1E90FF', fill: '#87CEEB' },
+      'bay-window': { stroke: '#1E90FF', fill: '#ADD8E6' },
+      'skylight': { stroke: '#4682B4', fill: '#B0E0E6' },
+      
+      // Structural elements
+      'stairs': { stroke: '#696969', fill: '#A9A9A9' },
+      'column': { stroke: '#696969', fill: '#A9A9A9' },
+      'beam': { stroke: '#696969', fill: '#A9A9A9' },
+      'railing': { stroke: '#A0522D', fill: '#CD853F' },
+      'ceiling': { stroke: '#A9A9A9', fill: '#DCDCDC' },
+      
+      // Furniture
+      'table': { stroke: '#8B4513', fill: '#A0522D' },
+      'sofa': { stroke: '#D2691E', fill: '#D2691E' },
+      'sectional': { stroke: '#D2691E', fill: '#E9967A' },
+      'bed': { stroke: '#8B4513', fill: '#CD853F' },
+      'chair': { stroke: '#A0522D', fill: '#A0522D' },
+      'desk': { stroke: '#A0522D', fill: '#DEB887' },
+      'bookshelf': { stroke: '#8B4513', fill: '#DEB887' },
+      'wardrobe': { stroke: '#8B4513', fill: '#D2B48C' },
+      'dresser': { stroke: '#8B4513', fill: '#DEB887' },
+      'nightstand': { stroke: '#8B4513', fill: '#D2B48C' },
+      
+      // Kitchen & Bath
+      'kitchen': { stroke: '#808080', fill: '#C0C0C0' },
+      'stove': { stroke: '#696969', fill: '#A9A9A9' },
+      'refrigerator': { stroke: '#708090', fill: '#B0C4DE' },
+      'kitchen-island': { stroke: '#808080', fill: '#D3D3D3' },
+      'counter': { stroke: '#696969', fill: '#DCDCDC' },
+      'cabinet': { stroke: '#8B4513', fill: '#DEB887' },
+      'sink': { stroke: '#4682B4', fill: '#B0C4DE' },
+      'bath': { stroke: '#ADD8E6', fill: '#ADD8E6' },
+      'shower': { stroke: '#4682B4', fill: '#B0E0E6' },
+      'toilet': { stroke: '#FFFFFF', fill: '#F0F0F0' },
+      'vanity': { stroke: '#8B4513', fill: '#D2B48C' },
+      
+      // Fixtures & Decor
+      'lamp': { stroke: '#FFD700', fill: '#FFFFE0' },
+      'ceiling-light': { stroke: '#FFD700', fill: '#FFFACD' },
+      'chandelier': { stroke: '#DAA520', fill: '#F0E68C' },
+      'carpet': { stroke: '#800080', fill: '#DDA0DD' },
+      'tiles': { stroke: '#A9A9A9', fill: '#D3D3D3' },
+      'plant': { stroke: '#228B22', fill: '#32CD32' },
+      'artwork': { stroke: '#4682B4', fill: '#87CEEB' },
+      'tv': { stroke: '#2F4F4F', fill: '#696969' },
+      'fireplace': { stroke: '#8B0000', fill: '#DC143C' },
+      
+      // Outdoor
+      'deck': { stroke: '#8B4513', fill: '#DEB887' },
+      'patio': { stroke: '#808080', fill: '#C0C0C0' },
+      'pool': { stroke: '#4682B4', fill: '#87CEEB' },
+      'garden': { stroke: '#228B22', fill: '#90EE90' },
+      'fence': { stroke: '#A0522D', fill: '#CD853F' },
+      'path': { stroke: '#A9A9A9', fill: '#D3D3D3' },
+      'outdoor-furniture': { stroke: '#8B4513', fill: '#F4A460' },
+      'bbq': { stroke: '#2F4F4F', fill: '#696969' },
+      
+      // Default
+      'default': { stroke: darkMode ? '#ffffff' : '#000000', fill: darkMode ? '#666666' : '#cccccc' }
+    };
+    
+    // Get colors for this structure type, fallback to default
+    const colorSet = colors[structure.type] || colors.default;
+    
     switch (structure.type) {
-     
-      case 'door':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#8B4513" // brown
-            strokeWidth={2}
-            closed
-          />
-        );
-      
-      case 'window':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#1E90FF" // blue
-            strokeWidth={2}
-            closed
-          />
-        );
-      
       case 'room':
         return (
           <Line
@@ -464,264 +679,84 @@ const getWallLength = (wall) => {
             closed
           />
         );
-
-      case 'table':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#8B4513" // brown
-            strokeWidth={2}
-            closed
-            fill="#A0522D" // sienna
-          />
-        );
-
-      case 'sofa':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#D2691E" // chocolate
-            strokeWidth={2}
-            closed
-            fill="#D2691E" // chocolate
-          />
-        );
-
-      case 'bed':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#8B4513" // brown
-            strokeWidth={2}
-            closed
-            fill="#CD853F" // peru
-          />
-        );
-
-      case 'chair':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#A0522D" // sienna
-            strokeWidth={2}
-            closed
-            fill="#A0522D" // sienna
-          />
-        );
-
-      case 'kitchen':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#808080" // grey
-            strokeWidth={2}
-            closed
-            fill="#C0C0C0" // silver
-          />
-        );
-
-      case 'bath':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#ADD8E6" // light blue
-            strokeWidth={2}
-            closed
-            fill="#ADD8E6" // light blue
-          />
-        );
-
-      case 'toilet':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#FFFFFF" // white
-            strokeWidth={2}
-            closed
-            fill="#F0F0F0" // off-white
-          />
-        );
-
-      case 'plant':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#228B22" // forest green
-            strokeWidth={2}
-            closed
-            fill="#32CD32" // lime green
-          />
-        );
-
-      case 'stairs':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#8B4513" // brown
-            strokeWidth={2}
-            closed
-            fill="#D2B48C" // tan
-          />
-        );
-
-      case 'carpet':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#800080" // purple
-            strokeWidth={1}
-            closed
-            fill="#DDA0DD" // plum
-          />
-        );
-
-      case 'tiles':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#A9A9A9" // dark grey
-            strokeWidth={1}
-            closed
-            fill="#D3D3D3" // light grey
-          />
-        );
-
-      case 'lamp':
-        return (
-          <Line
-            key={structure.id}
-            points={[
-              structure.x, structure.y,
-              structure.x + structure.width, structure.y,
-              structure.x + structure.width, structure.y + structure.height,
-              structure.x, structure.y + structure.height,
-              structure.x, structure.y
-            ]}
-            stroke="#FFD700" // gold
-            strokeWidth={2}
-            closed
-            fill="#FFFFE0" // light yellow
-          />
-        );
-
+      
+      // For all other structures, render as rectangular shapes with type-specific colors
       default:
-        return null;
+        return renderRectangular(colorSet.stroke, colorSet.fill);
     }
   }, [darkMode]);
 
-  // Helper function to get default width based on element type
-  const getDefaultWidth = (type) => {
-    switch(type) {
-      case 'table': return 60;
-      case 'sofa': return 80;
-      case 'bed': return 100;
-      case 'chair': return 40;
-      case 'kitchen': return 120;
-      case 'bath': return 80;
-      case 'toilet': return 40;
-      case 'plant': return 30;
-      case 'stairs': return 80;
-      case 'carpet': return 100;
-      case 'tiles': return 100;
-      case 'lamp': return 30;
-      default: return 50;
-    }
+  // Add styles for categories
+  const categoryBtnStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '12px 8px',
+    margin: '4px',
+    backgroundColor: darkMode ? '#222222' : '#f0f0f0',
+    border: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease-in-out',
+    width: 'calc(33.33% - 8px)',
+    height: '90px',
+    boxShadow: darkMode ? '0 2px 5px rgba(0,0,0,0.3)' : '0 2px 5px rgba(0,0,0,0.1)',
   };
 
-  // Helper function to get default height based on element type
-  const getDefaultHeight = (type) => {
-    switch(type) {
-      case 'table': return 60;
-      case 'sofa': return 40;
-      case 'bed': return 80;
-      case 'chair': return 40;
-      case 'kitchen': return 60;
-      case 'bath': return 50;
-      case 'toilet': return 40;
-      case 'plant': return 30;
-      case 'stairs': return 120;
-      case 'carpet': return 100;
-      case 'tiles': return 100;
-      case 'lamp': return 30;
-      default: return 50;
-    }
+  const activeCategoryStyle = {
+    ...categoryBtnStyle,
+    backgroundColor: darkMode ? '#333333' : '#e0e0e0',
+    borderColor: darkMode ? '#FACC15' : '#666666',
+    borderWidth: '2px',
+    boxShadow: darkMode ? '0 3px 7px rgba(250,204,21,0.2)' : '0 3px 7px rgba(0,0,0,0.2)',
+  };
+
+  const categoryIconStyle = {
+    fontSize: '2rem',
+    marginBottom: '10px',
+  };
+
+  const categoryLabelStyle = {
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    textAlign: 'center',
+    color: darkMode ? '#eeeeee' : '#333333',
+  };
+
+  const elementBtnStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '8px 4px',
+    backgroundColor: darkMode ? '#222222' : '#f5f5f5',
+    border: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease-in-out',
+    height: '75px',
+    boxShadow: darkMode ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)',
+  };
+
+  const activeElementStyle = {
+    ...elementBtnStyle,
+    backgroundColor: darkMode ? '#333333' : '#e0e0e0',
+    borderColor: darkMode ? '#FACC15' : '#666666',
+    borderWidth: '2px',
+    boxShadow: darkMode ? '0 2px 5px rgba(250,204,21,0.2)' : '0 2px 5px rgba(0,0,0,0.2)',
+  };
+
+  const elementIconStyle = {
+    fontSize: '1.6rem',
+    marginBottom: '5px',
+  };
+
+  const elementLabelStyle = {
+    fontSize: '0.7rem',
+    fontWeight: '600',
+    textAlign: 'center',
+    color: darkMode ? '#eeeeee' : '#333333',
   };
 
   // ---------------------------
@@ -798,56 +833,181 @@ const getWallLength = (wall) => {
 
         {/* Sidebar (Only for 2D Mode) */}
         {!is3DMode && (
-          <div className="sidebar">
-            <div className="elements-section">
-              <h2>Add Elements</h2>
-              <div className="elements-grid">
-                {elementButtons.map((element) => (
+          <div style={{
+            width: `${SIDEBAR_WIDTH}px`,
+            height: '100vh',
+            backgroundColor: darkMode ? '#000000' : '#ffffff',
+            borderRight: `1px solid ${darkMode ? '#333333' : '#dddddd'}`,
+            padding: '70px 15px 20px',
+            overflowY: 'auto',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px'
+          }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ 
+                padding: '10px 0 10px 5px', 
+                borderBottom: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
+                marginBottom: '15px',
+                color: darkMode ? '#ffffff' : '#333333',
+                fontWeight: '700',
+                fontSize: '1.3rem'
+              }}>Add Elements</h2>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '0', 
+                marginBottom: '15px',
+                justifyContent: 'space-between' 
+              }}>
+                {elementCategories.map((category) => (
                   <button
-                    key={element.id}
-                    className={`element-btn ${currentTool === element.id ? 'active' : ''}`}
-                    onClick={element.action}
+                    key={category.id}
+                    style={activeCategory === category.id ? activeCategoryStyle : categoryBtnStyle}
+                    onClick={() => setActiveCategory(category.id)}
                   >
-                    <span className="element-icon">{element.icon}</span>
-                    <span className="element-label">{element.label}</span>
+                    <span style={categoryIconStyle}>{category.icon}</span>
+                    <span style={categoryLabelStyle}>{category.label}</span>
                   </button>
                 ))}
               </div>
             </div>
   
-            <div className="settings-section">
-              <h2>Settings</h2>
-              <div className="settings-list">
-                <label className="setting-item">
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ 
+                padding: '0 0 10px 5px', 
+                borderBottom: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
+                marginBottom: '15px',
+                color: darkMode ? '#ffffff' : '#333333',
+                fontWeight: '600',
+                fontSize: '1.2rem'
+              }}>
+                {elementCategories.find(c => c.id === activeCategory)?.label || 'Elements'}
+              </h3>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '8px',
+                padding: '0 5px'
+              }}>
+                {currentElements.map((element) => (
+                  <button
+                    key={element.id}
+                    style={currentTool === element.id ? activeElementStyle : elementBtnStyle}
+                    onClick={element.action}
+                  >
+                    <span style={elementIconStyle}>{element.icon}</span>
+                    <span style={elementLabelStyle}>{element.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+  
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ 
+                padding: '10px 0 10px 5px', 
+                borderBottom: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
+                marginBottom: '15px',
+                color: darkMode ? '#ffffff' : '#333333',
+                fontWeight: '700',
+                fontSize: '1.3rem'
+              }}>Settings</h2>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '15px',
+                padding: '5px 10px'
+              }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  color: darkMode ? '#ffffff' : '#333333',
+                  fontWeight: '500',
+                }}>
                   <input
                     type="checkbox"
                     checked={showGrid}
                     onChange={() => setShowGrid(!showGrid)}
+                    style={{ 
+                      cursor: 'pointer',
+                      width: '18px',
+                      height: '18px'
+                    }}
                   />
                   Show Grid
                 </label>
-                <label className="setting-item">
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  color: darkMode ? '#ffffff' : '#333333',
+                  fontWeight: '500',
+                }}>
                   <input
                     type="checkbox"
                     checked={snapEnabled}
                     onChange={() => setSnapEnabled(!snapEnabled)}
+                    style={{ 
+                      cursor: 'pointer',
+                      width: '18px',
+                      height: '18px'
+                    }}
                   />
                   Enable Snapping
                 </label>
-                <label className="setting-item">
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  color: darkMode ? '#ffffff' : '#333333',
+                  fontWeight: '500',
+                }}>
                   <input
                     type="checkbox"
                     checked={!darkMode}
                     onChange={() => setDarkMode(!darkMode)}
+                    style={{ 
+                      cursor: 'pointer',
+                      width: '18px',
+                      height: '18px'
+                    }}
                   />
                   Light Mode
                 </label>
-                <div className="setting-item">
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '0.95rem',
+                  color: darkMode ? '#ffffff' : '#333333',
+                  fontWeight: '500',
+                }}>
                   <span>Unit:</span>
                   <select
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    className="unit-select"
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: darkMode ? '#333333' : '#f5f5f5',
+                      color: darkMode ? '#ffffff' : '#333333',
+                      border: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      width: '120px',
+                      boxShadow: darkMode ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)',
+                    }}
                   >
                     <option value="Meters">Meters</option>
                     <option value="Feet">Feet</option>
@@ -859,7 +1019,16 @@ const getWallLength = (wall) => {
         )}
   
         {/* Canvas Area */}
-        <div className="canvas-area">
+        <div style={{
+          marginLeft: is3DMode ? 0 : `${SIDEBAR_WIDTH}px`,
+          marginTop: '60px',
+          width: is3DMode ? '100vw' : `calc(100vw - ${SIDEBAR_WIDTH}px)`,
+          height: 'calc(100vh - 60px)',
+          overflow: 'hidden',
+          position: 'relative',
+          backgroundColor: darkMode ? '#1a1a1a' : '#f5f5f5',
+          transition: 'margin-left 0.3s ease-in-out'
+        }}>
           {is3DMode ? (
            <ThreeDCanvas
            walls={walls.map((wall) => ({
