@@ -662,11 +662,10 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
     const stepsPerWall = 10;
     const points = [];
   
-    // 1. Compute structure center for normal flipping
-    const allPoints = walls.flatMap(w => [new THREE.Vector2(w.x1, w.y1), new THREE.Vector2(w.x2, w.y2)]);
-    const center = allPoints.reduce((acc, p) => acc.add(p), new THREE.Vector2(0, 0)).divideScalar(allPoints.length);
+    const centerVec3 = getStructureCenter(walls);
+    const center = new THREE.Vector2(centerVec3.x, -centerVec3.z); // Convert to 2D center
   
-    walls.forEach((wall, i) => {
+    walls.forEach((wall) => {
       const { x1, y1, x2, y2 } = wall;
       const p1 = new THREE.Vector2(x1, y1);
       const p2 = new THREE.Vector2(x2, y2);
@@ -690,6 +689,7 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
   
     return points;
   };
+  
   
   
   
@@ -1067,5 +1067,30 @@ const Ceiling = () => {
   // Return null to completely remove the ceiling
   return null;
 };
+const getStructureCenter = (walls = []) => {
+  if (!walls.length) return new THREE.Vector3(0, 0, 0);
+
+  let minX = Infinity, minY = Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
+
+  walls.forEach(wall => {
+    const points = [
+      [wall.x1, wall.y1],
+      [wall.x2, wall.y2]
+    ];
+    points.forEach(([x, y]) => {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    });
+  });
+
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+
+  return new THREE.Vector3(centerX, 10, -centerY); // y=10 to match walkthrough height
+};
+
 
 export default memo(ThreeDCanvas);

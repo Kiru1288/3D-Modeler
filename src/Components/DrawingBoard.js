@@ -45,6 +45,7 @@ function DrawingBoard() {
   const [history, setHistory] = useState([{ walls: [], structures: [] }]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const stageRef = React.useRef(null); // Ref for Konva Stage
+  const [snapPoint, setSnapPoint] = useState(null);
 
   
   
@@ -102,6 +103,7 @@ const handleUndo = useCallback(() => {
   if (historyIndex > 0) {
     const prevState = history[historyIndex - 1];
     resetWalls(prevState.walls);
+    console.log("[handleUndo] Restoring structures:", prevState.structures);
     resetStructures(prevState.structures);
     setHistoryIndex((prevIndex) => prevIndex - 1);
   }
@@ -142,6 +144,7 @@ useEffect(() => {
   
   useEffect(() => {
     const currentState = JSON.stringify({ walls, structures });
+    console.log("Current state:", currentState);
   
     if (lastStateRef.current !== currentState) {
       lastStateRef.current = currentState;
@@ -418,15 +421,15 @@ useEffect(() => {
       const endpoints = [
         { x: wall.x1, y: wall.y1 },
         { x: wall.x2, y: wall.y2 },
+        { x: (wall.x1 + wall.x2) / 2, y: (wall.y1 + wall.y2) / 2, isMidpoint: true },
       ];
   
       for (const point of endpoints) {
         const dx = point.x - x;
         const dy = point.y - y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-  
         if (distance <= PROXIMITY_THRESHOLD) {
-          return point; 
+          return point;
         }
       }
     }
@@ -434,17 +437,23 @@ useEffect(() => {
   };
   
   
+  
 
   const handleDrawEnd = useCallback(() => {
     if (isDrawing && currentLine) {
-      const snappedStart = findNearbyEndpoint(currentLine.x1, currentLine.y1, walls) || {
-        x: currentLine.x1,
-        y: currentLine.y1
-      };
-      const snappedEnd = findNearbyEndpoint(currentLine.x2, currentLine.y2, walls) || {
-        x: currentLine.x2,
-        y: currentLine.y2
-      };
+      const snapStart = findNearbyEndpoint(currentLine.x1, currentLine.y1, walls);
+const snapEnd = findNearbyEndpoint(currentLine.x2, currentLine.y2, walls);
+
+const snappedStart = snapStart ? { x: snapStart.x, y: snapStart.y } : {
+  x: Math.round(currentLine.x1 / GRID_SPACING) * GRID_SPACING,
+  y: Math.round(currentLine.y1 / GRID_SPACING) * GRID_SPACING
+};
+
+const snappedEnd = snapEnd ? { x: snapEnd.x, y: snapEnd.y } : {
+  x: Math.round(currentLine.x2 / GRID_SPACING) * GRID_SPACING,
+  y: Math.round(currentLine.y2 / GRID_SPACING) * GRID_SPACING
+};
+
       
       const newElement = {
         id: Date.now(),
@@ -503,19 +512,23 @@ useEffect(() => {
 
   const handleDrawMove = useCallback((e) => {
     if (!isDrawing || !currentLine) return;
-
+  
     const pos = e.target.getStage().getPointerPosition();
     if (!pos) return;
-
+  
     const snappedPos = {
-        x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
-        y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING,
+      x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
+      y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING,
     };
-    setCurrentLine((prev) => prev ? { ...prev, x2: snappedPos.x, y2: snappedPos.y } : null);
-
-
-    
-}, [isDrawing, currentLine]);
+  
+    const nearbySnap = findNearbyEndpoint(snappedPos.x, snappedPos.y, walls);
+    setSnapPoint(nearbySnap); // 👈 update snap indicator
+  
+    setCurrentLine((prev) =>
+      prev ? { ...prev, x2: snappedPos.x, y2: snappedPos.y } : null
+    );
+  }, [isDrawing, currentLine, walls]);
+  
 
 const getWallLength = (wall) => {
   if (!wall) return 0;
@@ -1061,6 +1074,21 @@ const getWallLength = (wall) => {
               onDblClick={handleDoubleClick}
             >
               <Layer>
+              {snapPoint && (
+  <React.Fragment>
+    <Line
+      points={[snapPoint.x - 8, snapPoint.y, snapPoint.x + 8, snapPoint.y]}
+      stroke="gold"
+      strokeWidth={2}
+    />
+    <Line
+      points={[snapPoint.x, snapPoint.y - 8, snapPoint.x, snapPoint.y + 8]}
+      stroke="gold"
+      strokeWidth={2}
+    />
+  </React.Fragment>
+)}
+
                 {showGrid && renderGrid()}
                 {walls.map((wall, i) => {
                   const midY = (wall.y1 + wall.y2) / 2 - 20;

@@ -14,7 +14,10 @@ const CameraPathPreview = ({ pathPoints, enabled, speed = 0.01, onEnd }) => {
     const nextIndex = i + 1;
 
     if (nextIndex >= pathPoints.length) {
-      onEnd?.();
+      if (indexRef.current < pathPoints.length - 1) {
+        onEnd?.();
+        indexRef.current = pathPoints.length; // Prevent further calls
+      }
       return;
     }
 

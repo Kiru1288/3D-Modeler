@@ -62,7 +62,7 @@ const Canvas2D = ({ elements, selectedElement, onSelectElement, width, height })
       // Draw element based on type
       drawElement(ctx, element, color, isSelected);
     });
-  }, [elements, selectedElement, width, height]);
+  }, [elements, selectedElement]);
 
   // Draw individual element on canvas
   const drawElement = (ctx, element, color, isSelected) => {
