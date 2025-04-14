@@ -537,3 +537,15 @@ body {
     justify-content: center;
   }
 }
+
+.theme-toggle-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--font-color-highlight, #fff);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+}
