@@ -112,7 +112,7 @@ const Door = ({
             {/* Sliding door panel */}
             <mesh 
               ref={doorRef}
-              position={[0, 0, 0]}
+              position={[0, 0, 0.01]} // Added slight Z-axis offset
               castShadow 
               receiveShadow
               onClick={handleDoorClick}
@@ -168,7 +168,7 @@ const Door = ({
             
             {/* Right door panel (static in this example) */}
             <mesh 
-              position={[width/4, 0, 0]}
+              position={[width/4, 0, 0.01]} // Added slight Z-axis offset
               castShadow 
               receiveShadow
               onClick={handleDoorClick}
@@ -209,7 +209,7 @@ const Door = ({
               {/* Door itself - positioned so it rotates around its edge */}
               <mesh 
                 ref={doorRef}
-                position={[width/2 - 5, 0, 0]} 
+                position={[width/2 - 5, 0, 0.01]} // Added slight Z-axis offset
                 castShadow 
                 receiveShadow
               >

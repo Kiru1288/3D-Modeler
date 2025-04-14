@@ -444,15 +444,18 @@ useEffect(() => {
       const snapStart = findNearbyEndpoint(currentLine.x1, currentLine.y1, walls);
 const snapEnd = findNearbyEndpoint(currentLine.x2, currentLine.y2, walls);
 
-const snappedStart = snapStart ? { x: snapStart.x, y: snapStart.y } : {
-  x: Math.round(currentLine.x1 / GRID_SPACING) * GRID_SPACING,
-  y: Math.round(currentLine.y1 / GRID_SPACING) * GRID_SPACING
-};
+// Round endpoint precisely to nearest grid OR use exact match if near existing endpoint
+const roundAndSnap = (val) => Math.round(val / GRID_SPACING) * GRID_SPACING;
 
-const snappedEnd = snapEnd ? { x: snapEnd.x, y: snapEnd.y } : {
-  x: Math.round(currentLine.x2 / GRID_SPACING) * GRID_SPACING,
-  y: Math.round(currentLine.y2 / GRID_SPACING) * GRID_SPACING
-};
+const snappedStart = snapStart 
+  ? { x: snapStart.x, y: snapStart.y } 
+  : { x: roundAndSnap(currentLine.x1), y: roundAndSnap(currentLine.y1) };
+
+const snappedEnd = snapEnd 
+  ? { x: snapEnd.x, y: snapEnd.y } 
+  : { x: roundAndSnap(currentLine.x2), y: roundAndSnap(currentLine.y2) };
+
+  
 
       
       const newElement = {

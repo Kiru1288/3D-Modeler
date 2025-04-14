@@ -14,7 +14,7 @@ const Window = ({ position, size, rotation = [0, 0, 0], type = 'window' }) => {
             {/* Bay window consists of three window panes at angles */}
             <group>
               {/* Center pane */}
-              <mesh castShadow receiveShadow position={[0, 0, -15]}>
+              <mesh castShadow receiveShadow position={[0, 0, -14.99]}>
                 <boxGeometry args={[width * 0.6, height, 5]} />
                 <meshStandardMaterial color="#87CEEB" transparent opacity={0.6} />
               </mesh>
@@ -24,7 +24,7 @@ const Window = ({ position, size, rotation = [0, 0, 0], type = 'window' }) => {
               </mesh>
               
               {/* Left angled pane */}
-              <mesh castShadow receiveShadow position={[-width * 0.3 - 15, 0, -8]} rotation={[0, Math.PI / 8, 0]}>
+              <mesh castShadow receiveShadow position={[-width * 0.3 - 15, 0, -7.99]} rotation={[0, Math.PI / 8, 0]}>
                 <boxGeometry args={[width * 0.4, height, 5]} />
                 <meshStandardMaterial color="#87CEEB" transparent opacity={0.6} />
               </mesh>
@@ -34,7 +34,7 @@ const Window = ({ position, size, rotation = [0, 0, 0], type = 'window' }) => {
               </mesh>
               
               {/* Right angled pane */}
-              <mesh castShadow receiveShadow position={[width * 0.3 + 15, 0, -8]} rotation={[0, -Math.PI / 8, 0]}>
+              <mesh castShadow receiveShadow position={[width * 0.3 + 15, 0, -7.99]} rotation={[0, -Math.PI / 8, 0]}>
                 <boxGeometry args={[width * 0.4, height, 5]} />
                 <meshStandardMaterial color="#87CEEB" transparent opacity={0.6} />
               </mesh>
@@ -59,7 +59,7 @@ const Window = ({ position, size, rotation = [0, 0, 0], type = 'window' }) => {
               <boxGeometry args={[width, 5, height]} />
               <meshStandardMaterial color="#A0522D" />
             </mesh>
-            <mesh position={[0, -2, 0]} receiveShadow>
+            <mesh position={[0, -2, 0.01]} receiveShadow>
               <boxGeometry args={[width - 10, 5, height - 10]} />
               <meshStandardMaterial color="#87CEEB" transparent opacity={0.7} />
             </mesh>
@@ -77,6 +77,7 @@ const Window = ({ position, size, rotation = [0, 0, 0], type = 'window' }) => {
             
             {/* Glass pane */}
             <mesh position={[0, 0, 0]} receiveShadow>
+
               <boxGeometry args={[width - 10, height - 10, 5]} />
               <meshStandardMaterial color="#87CEEB" transparent opacity={0.6} />
             </mesh>

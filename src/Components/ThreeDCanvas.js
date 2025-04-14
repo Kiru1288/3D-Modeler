@@ -16,6 +16,8 @@ import Window from "./Windows";
 import Structure from "./Structure";
 import JoystickController from "./JoystickController";
 
+
+
 // -----------------------
 // Materials
 // -----------------------
@@ -287,7 +289,8 @@ const TerrainFeatures = () => {
 // -----------------------
 // New Scene Component
 // -----------------------
-const Scene = ({ walls = [], is3DMode, previewMode }) => {
+const Scene = ({ walls = [], is3DMode, previewMode, structures = [] }) => {
+
   const cameraProps = is3DMode
     ? { position: [0, 250, 250], fov: 60 }
     : { position: [0, 1000, 0], fov: 50 };
@@ -853,7 +856,13 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
         <Floor type="GRASS" />
         
         {/* Render walls */}
-        <Scene walls={snappedWalls} is3DMode={is3DMode} previewMode={previewMode} />
+        <Scene 
+  walls={snappedWalls} 
+  is3DMode={is3DMode} 
+  previewMode={previewMode} 
+  structures={structures}
+/>
+
 
         {/* Render structures */}
         {structures.map((structure, i) => {
