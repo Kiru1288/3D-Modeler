@@ -1,0 +1,57 @@
+:root {
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+  --bg-overlay-light: rgba(0, 0, 0, 0.7);
+  --text-color: #fff;
+  --border-radius: 4px;
+  --padding-small: 4px 8px;
+  --padding-medium: 10px;
+  --font-size-small: 12px;
+}
+
+/* Measurement label for displaying measurements in the scene */
+.measurement-label {
+  background: var(--bg-overlay-light);
+  color: var(--text-color);
+  padding: var(--padding-small);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* Transform Controls Panel */
+.transform-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-overlay);
+  padding: var(--padding-medium);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
+}
+
+/* Camera Controls Container */
+.camera-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Individual Camera Control Button */
+.camera-button {
+  background: var(--bg-overlay);
+  color: var(--text-color);
+  border: none;
+  padding: 8px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.camera-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
