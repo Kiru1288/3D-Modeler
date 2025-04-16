@@ -1,0 +1,133 @@
+:root {
+  --background-light: #f7f7f7;
+  --background-dark: #1e1e1e;
+  --text-light: #333;
+  --text-dark: #fff;
+  --primary-color: gold;
+  --accent-color: #ff7f50;
+}
+
+body {
+  background-color: var(--background-light);
+  color: var(--text-light);
+  font-family: 'Arial', sans-serif;
+  transition: background 0.5s ease-in-out, color 0.5s ease-in-out;
+}
+
+body.dark-mode {
+  background-color: var(--background-dark);
+  color: var(--text-dark);
+}
+
+.glassmorphism {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: black;
+  border-bottom: 2px solid gold;
+  border-radius: 10px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  transition: all 0.3s ease-in-out;
+}
+
+.center-btn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.menu-toggle {
+  background: black;
+  color: gold;
+  border: 2px solid gold;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.menu-toggle:hover {
+  background: gold;
+  color: black;
+}
+
+.menu-content {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+}
+
+.menu-content.open {
+  display: block;
+  transition: max-height 0.3s ease-out;
+}
+
+.side-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.primary-btn {
+  background: linear-gradient(145deg, #1a1a1a, #444);
+  color: gold;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 2px solid gold;
+  box-shadow: 4px 4px 8px rgba(255, 215, 0, 0.5);
+  transition: all 0.3s ease-in-out;
+}
+
+.primary-btn:hover {
+  background: gold;
+  color: black;
+  box-shadow: inset 4px 4px 8px rgba(255, 215, 0, 0.5);
+  transform: scale(1.05);
+}
+
+.button-31 {
+  background: black;
+  color: gold;
+  border-radius: 6px;
+  border: 2px solid gold;
+  font-weight: bold;
+  padding: 10px 15px;
+  transition: all 0.3s ease-in-out;
+}
+
+.button-31:hover {
+  background: gold;
+  color: black;
+  transform: scale(1.05);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: gold;
+}
