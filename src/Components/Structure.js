@@ -13,6 +13,19 @@ const Structure = ({
   color = "#cccccc",
   rotation = 0
 }) => {
+  // Define materials for different structure types
+  const materials = {
+    table: { color: '#8b4513', roughness: 0.6, metalness: 0.2 },
+    sofa: { color: '#d2691e', roughness: 0.7, metalness: 0.1 },
+    bed: { color: '#deb887', roughness: 0.6, metalness: 0.1 },
+    chair: { color: '#a0522d', roughness: 0.5, metalness: 0.2 },
+    desk: { color: '#8b4513', roughness: 0.6, metalness: 0.2 },
+    cabinet: { color: '#deb887', roughness: 0.5, metalness: 0.2 },
+    default: { color: '#8b4513', roughness: 0.6, metalness: 0.2 }
+  };
+
+  const material = materials[type] || materials.default;
+
   // Color mapping for different structure types
   const colorMap = {
     sofa: "#d2691e",
