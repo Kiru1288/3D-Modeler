@@ -1,5 +1,6 @@
-import React, { useEffect, memo, useRef, useCallback } from "react";
+import React, { useEffect, memo, useRef, useCallback, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
+import { TextureLoader } from 'three';
 
 import {
   OrbitControls,
@@ -23,9 +24,12 @@ import JoystickController from "./JoystickController";
 // -----------------------
 const MATERIALS = {
   WALL: new THREE.MeshStandardMaterial({
-    color: "#cccccc",
-    roughness: 0.5,
+    color: "#8B4513", // Saddle brown color
+    roughness: 0.9,
     metalness: 0.1,
+    map: new THREE.TextureLoader().load('/textures/brick_diffuse.jpg'),
+    normalMap: new THREE.TextureLoader().load('/textures/brick_normal.jpg'),
+    roughnessMap: new THREE.TextureLoader().load('/textures/brick_roughness.jpg'),
   }),
   FLOOR: new THREE.MeshStandardMaterial({
     color: "#e0e0e0",
@@ -70,19 +74,19 @@ const MATERIALS = {
     metalness: 0.2,
   }),
   WALL_CONCRETE: new THREE.MeshStandardMaterial({
-    color: "#808080",
-    roughness: 0.6,
-    metalness: 0.1,
+    color: "#000000",
+    roughness: 0.3,
+    metalness: 0.8,
   }),
   WALL_DRYWALL: new THREE.MeshStandardMaterial({
-    color: "#f5f5f5",
-    roughness: 0.5,
-    metalness: 0.0,
+    color: "#000000",
+    roughness: 0.3,
+    metalness: 0.8,
   }),
   WALL_BRICK: new THREE.MeshStandardMaterial({
-    color: "#b22222",
-    roughness: 0.7,
-    metalness: 0.0,
+    color: "#000000",
+    roughness: 0.3,
+    metalness: 0.8,
   }),
   DOOR_SLIDING: new THREE.MeshStandardMaterial({
     color: "#deb887",
@@ -218,38 +222,41 @@ const initializePlaceholderMaterials = () => {
 // Wall Component
 // -----------------------
 const Wall = ({ x1, y1, x2, y2, height = 40, thickness = 5, type, material }) => {
-  // Default to a material if none provided or if there's an issue
-  let wallMaterial;
-  try {
-    wallMaterial = material || MATERIALS[type] || MATERIALS.WALL_CONCRETE;
-  } catch (error) {
-    // Fallback to a basic material
-    wallMaterial = new THREE.MeshStandardMaterial({
-      color: "#b76728", // Brown color like in screenshot
-      roughness: 0.7,
-      metalness: 0.1,
-    });
-  }
-  
+  // Create a custom material with brick texture
+  const wallMaterial = new THREE.MeshStandardMaterial({
+    color: "#8B4513", // Saddle brown color
+    roughness: 0.9,
+    metalness: 0.1,
+    map: new THREE.TextureLoader().load('/textures/brick_diffuse.jpg'),
+    normalMap: new THREE.TextureLoader().load('/textures/brick_normal.jpg'),
+    roughnessMap: new THREE.TextureLoader().load('/textures/brick_roughness.jpg'),
+  });
+
   const length = Math.hypot(x2 - x1, y2 - y1);
   const angle = Math.atan2(y2 - y1, x2 - x1);
+  
+  // Configure texture tiling based on wall length
+  if (wallMaterial.map) {
+    wallMaterial.map.wrapS = wallMaterial.map.wrapT = THREE.RepeatWrapping;
+    wallMaterial.map.repeat.set(length/20, height/20);
+  }
+  if (wallMaterial.normalMap) {
+    wallMaterial.normalMap.wrapS = wallMaterial.normalMap.wrapT = THREE.RepeatWrapping;
+    wallMaterial.normalMap.repeat.set(length/20, height/20);
+  }
+  if (wallMaterial.roughnessMap) {
+    wallMaterial.roughnessMap.wrapS = wallMaterial.roughnessMap.wrapT = THREE.RepeatWrapping;
+    wallMaterial.roughnessMap.repeat.set(length/20, height/20);
+  }
   
   return (
     <group
       position={[(x1 + x2) / 2, height / 2, -(y1 + y2) / 2]}
       rotation={[0, -angle, 0]}
     >
-      {/* Main wall */}
-      <mesh
-        castShadow
-        receiveShadow
-      >
+      <mesh castShadow receiveShadow>
         <boxGeometry args={[length, height, thickness]} />
-        <meshStandardMaterial 
-          color="#b76728"
-          roughness={0.7}
-          metalness={0.1}
-        />
+        <meshStandardMaterial {...wallMaterial} />
       </mesh>
     </group>
   );
@@ -261,21 +268,20 @@ const Wall = ({ x1, y1, x2, y2, height = 40, thickness = 5, type, material }) =>
 const Lighting = () => (
   <>
     {/* Simple ambient light for even illumination */}
-    <ambientLight intensity={0.8} />
+    <ambientLight intensity={0.3} />
     
     {/* Main directional light - simulates sun */}
     <directionalLight 
-      position={[300, 400, 300]} 
+      position={[50, 100, 50]} 
       intensity={0.8} 
       castShadow 
       shadow-mapSize-width={2048}
       shadow-mapSize-height={2048}
-      shadow-camera-left={-500}
-      shadow-camera-right={500}
-      shadow-camera-top={500}
-      shadow-camera-bottom={-500}
-      shadow-camera-far={1500}
-      shadow-bias={-0.0001}
+    />
+    <directionalLight
+      position={[-50, 100, -50]}
+      intensity={0.3}
+      castShadow
     />
   </>
 );
@@ -611,6 +617,14 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
   const [walkThroughPath, setWalkThroughPath] = React.useState([]);
   const [previewMode, setPreviewMode] = React.useState(false);
 
+  const [groundTexture] = useState(() => {
+    const loader = new TextureLoader();
+    const texture = loader.load('/textures/grass_diffuse.jpg');
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(100, 100); // More repetitions for grass
+    return texture;
+  });
+
   useEffect(() => {
     const newPath = generateWalkthroughPath(snappedWalls, structures);
     console.log("🚶 Walkthrough Path:");
@@ -825,13 +839,18 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
         />
 
         {/* Enhanced lighting setup */}
-        <ambientLight intensity={0.8} />
-        <directionalLight 
-          position={[10, 10, 5]} 
-          intensity={1.5} 
+        <ambientLight intensity={0.3} />
+        <directionalLight
+          position={[50, 100, 50]}
+          intensity={0.8}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
+        />
+        <directionalLight
+          position={[-50, 100, -50]}
+          intensity={0.3}
+          castShadow
         />
         <hemisphereLight 
           skyColor="#b1e1ff" 
@@ -853,7 +872,18 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
         <Lighting />
         
         {/* Enhanced floor with reference markers */}
-        <Floor type="GRASS" />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
+          <planeGeometry args={[1000, 1000]} />
+          <meshStandardMaterial 
+            map={groundTexture}
+            color="#4a8505" // Rich grass green color
+            roughness={1}
+            metalness={0}
+            receiveShadow
+          >
+            <color attach="color" args={['#4a8505']} /> {/* Base grass color */}
+          </meshStandardMaterial>
+        </mesh>
         
         {/* Render walls */}
         <Scene 

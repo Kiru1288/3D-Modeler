@@ -205,88 +205,88 @@ useEffect(() => {
   const [activeCategory, setActiveCategory] = useState('walls');
   
   const elementCategories = [
-    { id: 'walls', label: 'Walls & Structure', icon: '📐' },
-    { id: 'doors', label: 'Doors & Windows', icon: '🚪' },
-    { id: 'furniture', label: 'Furniture', icon: '🛋️' },
-    { id: 'kitchen', label: 'Kitchen & Bath', icon: '🔪' },
-    { id: 'fixtures', label: 'Fixtures & Decor', icon: '💡' },
-    { id: 'outdoor', label: 'Outdoor', icon: '🌳' }
+    { id: 'walls', label: 'Walls & Structure', icon: '' },
+    { id: 'doors', label: 'Doors & Windows', icon: '' },
+    { id: 'furniture', label: 'Furniture', icon: '' },
+    { id: 'kitchen', label: 'Kitchen & Bath', icon: '' },
+    { id: 'fixtures', label: 'Fixtures & Decor', icon: '' },
+    { id: 'outdoor', label: 'Outdoor', icon: '' }
   ];
 
   const categorizedElements = {
     // Walls & Structural elements
     walls: [
-      { id: 'wall', icon: '🧊', label: 'Wall', action: () => handleToolSelect('wall') },
-      { id: 'room', icon: '🏛️', label: 'Room', action: () => handleToolSelect('room') },
-      { id: 'column', icon: '🏛️', label: 'Column', action: () => handleToolSelect('column') },
-      { id: 'beam', icon: '📏', label: 'Beam', action: () => handleToolSelect('beam') },
-      { id: 'stairs', icon: '📶', label: 'Stairs', action: () => handleToolSelect('stairs') },
-      { id: 'railing', icon: '🔄', label: 'Railing', action: () => handleToolSelect('railing') },
-      { id: 'ceiling', icon: '⬜', label: 'Ceiling', action: () => handleToolSelect('ceiling') },
+      { id: 'wall', icon: '', label: 'Wall', action: () => handleToolSelect('wall') },
+      { id: 'room', icon: '', label: 'Room', action: () => handleToolSelect('room') },
+      { id: 'column', icon: '', label: 'Column', action: () => handleToolSelect('column') },
+      { id: 'beam', icon: '', label: 'Beam', action: () => handleToolSelect('beam') },
+      { id: 'stairs', icon: '', label: 'Stairs', action: () => handleToolSelect('stairs') },
+      { id: 'railing', icon: '', label: 'Railing', action: () => handleToolSelect('railing') },
+      { id: 'ceiling', icon: '', label: 'Ceiling', action: () => handleToolSelect('ceiling') },
     ],
     
     // Doors & Windows
     doors: [
-      { id: 'door', icon: '🚪', label: 'Door', action: () => handleToolSelect('door') },
-      { id: 'sliding-door', icon: '↔️', label: 'Sliding Door', action: () => handleToolSelect('sliding-door') },
-      { id: 'french-door', icon: '🚪', label: 'French Door', action: () => handleToolSelect('french-door') },
-      { id: 'window', icon: '🪟', label: 'Window', action: () => handleToolSelect('window') },
-      { id: 'bay-window', icon: '🏙️', label: 'Bay Window', action: () => handleToolSelect('bay-window') },
-      { id: 'skylight', icon: '☀️', label: 'Skylight', action: () => handleToolSelect('skylight') },
+      { id: 'door', icon: '', label: 'Door', action: () => handleToolSelect('door') },
+      { id: 'sliding-door', icon: '', label: 'Sliding Door', action: () => handleToolSelect('sliding-door') },
+      { id: 'french-door', icon: '', label: 'French Door', action: () => handleToolSelect('french-door') },
+      { id: 'window', icon: '', label: 'Window', action: () => handleToolSelect('window') },
+      { id: 'bay-window', icon: '', label: 'Bay Window', action: () => handleToolSelect('bay-window') },
+      { id: 'skylight', icon: '', label: 'Skylight', action: () => handleToolSelect('skylight') },
     ],
     
     // Furniture
     furniture: [
-      { id: 'sofa', icon: '🛋️', label: 'Sofa', action: () => handleToolSelect('sofa') },
-      { id: 'sectional', icon: '🔄', label: 'L-Sectional', action: () => handleToolSelect('sectional') },
-      { id: 'bed', icon: '🛏️', label: 'Bed', action: () => handleToolSelect('bed') },
-      { id: 'table', icon: '🎲', label: 'Table', action: () => handleToolSelect('table') },
-      { id: 'desk', icon: '💻', label: 'Desk', action: () => handleToolSelect('desk') },
-      { id: 'chair', icon: '🪑', label: 'Chair', action: () => handleToolSelect('chair') },
-      { id: 'bookshelf', icon: '📚', label: 'Bookshelf', action: () => handleToolSelect('bookshelf') },
-      { id: 'wardrobe', icon: '👕', label: 'Wardrobe', action: () => handleToolSelect('wardrobe') },
-      { id: 'dresser', icon: '🧳', label: 'Dresser', action: () => handleToolSelect('dresser') },
-      { id: 'nightstand', icon: '📖', label: 'Nightstand', action: () => handleToolSelect('nightstand') },
+      { id: 'sofa', icon: '', label: 'Sofa', action: () => handleToolSelect('sofa') },
+      { id: 'sectional', icon: '', label: 'L-Sectional', action: () => handleToolSelect('sectional') },
+      { id: 'bed', icon: '', label: 'Bed', action: () => handleToolSelect('bed') },
+      { id: 'table', icon: '', label: 'Table', action: () => handleToolSelect('table') },
+      { id: 'desk', icon: '', label: 'Desk', action: () => handleToolSelect('desk') },
+      { id: 'chair', icon: '', label: 'Chair', action: () => handleToolSelect('chair') },
+      { id: 'bookshelf', icon: '', label: 'Bookshelf', action: () => handleToolSelect('bookshelf') },
+      { id: 'wardrobe', icon: '', label: 'Wardrobe', action: () => handleToolSelect('wardrobe') },
+      { id: 'dresser', icon: '', label: 'Dresser', action: () => handleToolSelect('dresser') },
+      { id: 'nightstand', icon: '', label: 'Nightstand', action: () => handleToolSelect('nightstand') },
     ],
     
     // Kitchen & Bath
     kitchen: [
-      { id: 'kitchen', icon: '🍽️', label: 'Kitchen', action: () => handleToolSelect('kitchen') },
-      { id: 'stove', icon: '🔥', label: 'Stove', action: () => handleToolSelect('stove') },
-      { id: 'refrigerator', icon: '❄️', label: 'Refrigerator', action: () => handleToolSelect('refrigerator') },
-      { id: 'kitchen-island', icon: '⬜', label: 'Island', action: () => handleToolSelect('kitchen-island') },
-      { id: 'counter', icon: '📏', label: 'Counter', action: () => handleToolSelect('counter') },
-      { id: 'cabinet', icon: '🗄️', label: 'Cabinet', action: () => handleToolSelect('cabinet') },
-      { id: 'sink', icon: '💧', label: 'Sink', action: () => handleToolSelect('sink') },
-      { id: 'bath', icon: '🛀', label: 'Bath', action: () => handleToolSelect('bath') },
-      { id: 'shower', icon: '🚿', label: 'Shower', action: () => handleToolSelect('shower') },
-      { id: 'toilet', icon: '🚽', label: 'Toilet', action: () => handleToolSelect('toilet') },
-      { id: 'vanity', icon: '🪞', label: 'Vanity', action: () => handleToolSelect('vanity') },
+      { id: 'kitchen', icon: '', label: 'Kitchen', action: () => handleToolSelect('kitchen') },
+      { id: 'stove', icon: '', label: 'Stove', action: () => handleToolSelect('stove') },
+      { id: 'refrigerator', icon: '', label: 'Refrigerator', action: () => handleToolSelect('refrigerator') },
+      { id: 'kitchen-island', icon: '', label: 'Island', action: () => handleToolSelect('kitchen-island') },
+      { id: 'counter', icon: '', label: 'Counter', action: () => handleToolSelect('counter') },
+      { id: 'cabinet', icon: '', label: 'Cabinet', action: () => handleToolSelect('cabinet') },
+      { id: 'sink', icon: '', label: 'Sink', action: () => handleToolSelect('sink') },
+      { id: 'bath', icon: '', label: 'Bath', action: () => handleToolSelect('bath') },
+      { id: 'shower', icon: '', label: 'Shower', action: () => handleToolSelect('shower') },
+      { id: 'toilet', icon: '', label: 'Toilet', action: () => handleToolSelect('toilet') },
+      { id: 'vanity', icon: '', label: 'Vanity', action: () => handleToolSelect('vanity') },
     ],
     
     // Fixtures & Decor
     fixtures: [
-      { id: 'lamp', icon: '💡', label: 'Lamp', action: () => handleToolSelect('lamp') },
-      { id: 'ceiling-light', icon: '☀️', label: 'Ceiling Light', action: () => handleToolSelect('ceiling-light') },
-      { id: 'chandelier', icon: '✨', label: 'Chandelier', action: () => handleToolSelect('chandelier') },
-      { id: 'carpet', icon: '📦', label: 'Carpet', action: () => handleToolSelect('carpet') },
-      { id: 'tiles', icon: '🔳', label: 'Tiles', action: () => handleToolSelect('tiles') },
-      { id: 'plant', icon: '🌿', label: 'Plant', action: () => handleToolSelect('plant') },
-      { id: 'artwork', icon: '🖼️', label: 'Artwork', action: () => handleToolSelect('artwork') },
-      { id: 'tv', icon: '📺', label: 'TV', action: () => handleToolSelect('tv') },
-      { id: 'fireplace', icon: '🔥', label: 'Fireplace', action: () => handleToolSelect('fireplace') },
+      { id: 'lamp', icon: '', label: 'Lamp', action: () => handleToolSelect('lamp') },
+      { id: 'ceiling-light', icon: '', label: 'Ceiling Light', action: () => handleToolSelect('ceiling-light') },
+      { id: 'chandelier', icon: '', label: 'Chandelier', action: () => handleToolSelect('chandelier') },
+      { id: 'carpet', icon: '', label: 'Carpet', action: () => handleToolSelect('carpet') },
+      { id: 'tiles', icon: '', label: 'Tiles', action: () => handleToolSelect('tiles') },
+      { id: 'plant', icon: '', label: 'Plant', action: () => handleToolSelect('plant') },
+      { id: 'artwork', icon: '', label: 'Artwork', action: () => handleToolSelect('artwork') },
+      { id: 'tv', icon: '', label: 'TV', action: () => handleToolSelect('tv') },
+      { id: 'fireplace', icon: '', label: 'Fireplace', action: () => handleToolSelect('fireplace') },
     ],
     
     // Outdoor elements
     outdoor: [
-      { id: 'deck', icon: '🏕️', label: 'Deck', action: () => handleToolSelect('deck') },
-      { id: 'patio', icon: '⬜', label: 'Patio', action: () => handleToolSelect('patio') },
-      { id: 'pool', icon: '💦', label: 'Pool', action: () => handleToolSelect('pool') },
-      { id: 'garden', icon: '🌱', label: 'Garden', action: () => handleToolSelect('garden') },
-      { id: 'fence', icon: '🔲', label: 'Fence', action: () => handleToolSelect('fence') },
-      { id: 'path', icon: '🛣️', label: 'Path', action: () => handleToolSelect('path') },
-      { id: 'outdoor-furniture', icon: '🪑', label: 'Outdoor Furniture', action: () => handleToolSelect('outdoor-furniture') },
-      { id: 'bbq', icon: '♨️', label: 'BBQ', action: () => handleToolSelect('bbq') },
+      { id: 'deck', icon: '', label: 'Deck', action: () => handleToolSelect('deck') },
+      { id: 'patio', icon: '', label: 'Patio', action: () => handleToolSelect('patio') },
+      { id: 'pool', icon: '', label: 'Pool', action: () => handleToolSelect('pool') },
+      { id: 'garden', icon: '', label: 'Garden', action: () => handleToolSelect('garden') },
+      { id: 'fence', icon: '', label: 'Fence', action: () => handleToolSelect('fence') },
+      { id: 'path', icon: '', label: 'Path', action: () => handleToolSelect('path') },
+      { id: 'outdoor-furniture', icon: '', label: 'Outdoor Furniture', action: () => handleToolSelect('outdoor-furniture') },
+      { id: 'bbq', icon: '', label: 'BBQ', action: () => handleToolSelect('bbq') },
     ],
   };
   
@@ -710,74 +710,96 @@ const getWallLength = (wall) => {
   // Add styles for categories
   const categoryBtnStyle = {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '12px 8px',
-    margin: '4px',
-    backgroundColor: darkMode ? '#222222' : '#f0f0f0',
-    border: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
-    borderRadius: '12px',
+    padding: '2px',
+    margin: '0',
+    backgroundColor: '#1e1e1e',
+    border: '1px solid #444',
+    borderRadius: '4px',
     cursor: 'pointer',
-    transition: 'all 0.2s ease-in-out',
-    width: 'calc(33.33% - 8px)',
-    height: '90px',
-    boxShadow: darkMode ? '0 2px 5px rgba(0,0,0,0.3)' : '0 2px 5px rgba(0,0,0,0.1)',
+    width: 'calc(33.33% - 1px)',
+    height: '40px',
   };
 
   const activeCategoryStyle = {
     ...categoryBtnStyle,
-    backgroundColor: darkMode ? '#333333' : '#e0e0e0',
-    borderColor: darkMode ? '#FACC15' : '#666666',
-    borderWidth: '2px',
-    boxShadow: darkMode ? '0 3px 7px rgba(250,204,21,0.2)' : '0 3px 7px rgba(0,0,0,0.2)',
-  };
-
-  const categoryIconStyle = {
-    fontSize: '2rem',
-    marginBottom: '10px',
+    backgroundColor: '#252525',
+    borderColor: '#FACC15',
+    borderWidth: '1px',
   };
 
   const categoryLabelStyle = {
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     fontWeight: '600',
     textAlign: 'center',
-    color: darkMode ? '#eeeeee' : '#333333',
+    color: '#ffffff',
   };
 
   const elementBtnStyle = {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '8px 4px',
-    backgroundColor: darkMode ? '#222222' : '#f5f5f5',
-    border: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
-    borderRadius: '10px',
+    padding: '2px',
+    backgroundColor: '#1e1e1e',
+    border: '1px solid #444',
+    borderRadius: '4px',
     cursor: 'pointer',
-    transition: 'all 0.2s ease-in-out',
-    height: '75px',
-    boxShadow: darkMode ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)',
+    height: '32px',
   };
 
   const activeElementStyle = {
     ...elementBtnStyle,
-    backgroundColor: darkMode ? '#333333' : '#e0e0e0',
-    borderColor: darkMode ? '#FACC15' : '#666666',
+    backgroundColor: '#252525',
+    borderColor: '#FACC15',
     borderWidth: '2px',
-    boxShadow: darkMode ? '0 2px 5px rgba(250,204,21,0.2)' : '0 2px 5px rgba(0,0,0,0.2)',
-  };
-
-  const elementIconStyle = {
-    fontSize: '1.6rem',
-    marginBottom: '5px',
   };
 
   const elementLabelStyle = {
-    fontSize: '0.7rem',
-    fontWeight: '600',
+    fontSize: '0.8rem',
+    fontWeight: '500',
     textAlign: 'center',
-    color: darkMode ? '#eeeeee' : '#333333',
+    color: '#ffffff',
+  };
+
+  // Add styles for the sidebar container
+  const sidebarStyle = {
+    width: `${SIDEBAR_WIDTH}px`,
+    height: '100vh',
+    backgroundColor: '#121212',
+    borderRight: '1px solid #333',
+    padding: '45px 4px 4px',
+    overflowY: 'auto',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    zIndex: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  };
+
+  // Add styles for section headers
+  const sectionHeaderStyle = {
+    padding: '0 0 2px 2px',
+    borderBottom: '1px solid #444',
+    marginBottom: '4px',
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: '0.9rem',
+  };
+
+  // Add styles for the elements grid
+  const elementsGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '2px',
+    padding: '0'
+  };
+
+  // Add styles for section container
+  const sectionContainerStyle = {
+    marginBottom: '6px',
   };
 
   // ---------------------------
@@ -854,35 +876,14 @@ const getWallLength = (wall) => {
 
         {/* Sidebar (Only for 2D Mode) */}
         {!is3DMode && (
-          <div style={{
-            width: `${SIDEBAR_WIDTH}px`,
-            height: '100vh',
-            backgroundColor: darkMode ? '#000000' : '#ffffff',
-            borderRight: `1px solid ${darkMode ? '#333333' : '#dddddd'}`,
-            padding: '70px 15px 20px',
-            overflowY: 'auto',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            zIndex: 10,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px'
-          }}>
-            <div style={{ marginBottom: '20px' }}>
-              <h2 style={{ 
-                padding: '10px 0 10px 5px', 
-                borderBottom: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
-                marginBottom: '15px',
-                color: darkMode ? '#ffffff' : '#333333',
-                fontWeight: '700',
-                fontSize: '1.3rem'
-              }}>Add Elements</h2>
+          <div style={sidebarStyle}>
+            <div style={sectionContainerStyle}>
+              <h2 style={sectionHeaderStyle}>Add Elements</h2>
               <div style={{ 
                 display: 'flex', 
                 flexWrap: 'wrap', 
-                gap: '0', 
-                marginBottom: '15px',
+                gap: '1px', 
+                marginBottom: '4px',
                 justifyContent: 'space-between' 
               }}>
                 {elementCategories.map((category) => (
@@ -891,143 +892,121 @@ const getWallLength = (wall) => {
                     style={activeCategory === category.id ? activeCategoryStyle : categoryBtnStyle}
                     onClick={() => setActiveCategory(category.id)}
                   >
-                    <span style={categoryIconStyle}>{category.icon}</span>
                     <span style={categoryLabelStyle}>{category.label}</span>
                   </button>
                 ))}
               </div>
             </div>
-  
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ 
-                padding: '0 0 10px 5px', 
-                borderBottom: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
-                marginBottom: '15px',
-                color: darkMode ? '#ffffff' : '#333333',
-                fontWeight: '600',
-                fontSize: '1.2rem'
-              }}>
+
+            <div style={sectionContainerStyle}>
+              <h3 style={{...sectionHeaderStyle, fontSize: '1rem'}}>
                 {elementCategories.find(c => c.id === activeCategory)?.label || 'Elements'}
               </h3>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '8px',
-                padding: '0 5px'
-              }}>
+              <div style={elementsGridStyle}>
                 {currentElements.map((element) => (
                   <button
                     key={element.id}
                     style={currentTool === element.id ? activeElementStyle : elementBtnStyle}
                     onClick={element.action}
                   >
-                    <span style={elementIconStyle}>{element.icon}</span>
                     <span style={elementLabelStyle}>{element.label}</span>
                   </button>
                 ))}
               </div>
             </div>
-  
-            <div style={{ marginBottom: '20px' }}>
-              <h2 style={{ 
-                padding: '10px 0 10px 5px', 
-                borderBottom: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
-                marginBottom: '15px',
-                color: darkMode ? '#ffffff' : '#333333',
-                fontWeight: '700',
-                fontSize: '1.3rem'
-              }}>Settings</h2>
+
+            <div style={sectionContainerStyle}>
+              <h3 style={{...sectionHeaderStyle, fontSize: '1rem'}}>Settings</h3>
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '15px',
-                padding: '5px 10px'
+                gap: '2px',
               }}>
-                <label style={{
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                  color: darkMode ? '#ffffff' : '#333333',
-                  fontWeight: '500',
+                  justifyContent: 'space-between',
+                  padding: '2px 4px',
+                  backgroundColor: '#1e1e1e',
+                  borderRadius: '3px',
                 }}>
+                  <span style={{ color: '#fff', fontWeight: '500', fontSize: '0.85rem' }}>Show Grid</span>
                   <input
                     type="checkbox"
                     checked={showGrid}
                     onChange={() => setShowGrid(!showGrid)}
                     style={{ 
                       cursor: 'pointer',
-                      width: '18px',
-                      height: '18px'
+                      width: '16px',
+                      height: '16px'
                     }}
                   />
-                  Show Grid
-                </label>
-                <label style={{
+                </div>
+
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                  color: darkMode ? '#ffffff' : '#333333',
-                  fontWeight: '500',
+                  justifyContent: 'space-between',
+                  padding: '2px 4px',
+                  backgroundColor: '#1e1e1e',
+                  borderRadius: '3px',
                 }}>
+                  <span style={{ color: '#fff', fontWeight: '500', fontSize: '0.85rem' }}>Enable Snapping</span>
                   <input
                     type="checkbox"
                     checked={snapEnabled}
                     onChange={() => setSnapEnabled(!snapEnabled)}
                     style={{ 
                       cursor: 'pointer',
-                      width: '18px',
-                      height: '18px'
+                      width: '16px',
+                      height: '16px'
                     }}
                   />
-                  Enable Snapping
-                </label>
-                <label style={{
+                </div>
+
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                  color: darkMode ? '#ffffff' : '#333333',
-                  fontWeight: '500',
+                  justifyContent: 'space-between',
+                  padding: '2px 4px',
+                  backgroundColor: '#1e1e1e',
+                  borderRadius: '3px',
                 }}>
+                  <span style={{ color: '#fff', fontWeight: '500', fontSize: '0.85rem' }}>Light Mode</span>
                   <input
                     type="checkbox"
                     checked={!darkMode}
                     onChange={() => setDarkMode(!darkMode)}
                     style={{ 
                       cursor: 'pointer',
-                      width: '18px',
-                      height: '18px'
+                      width: '16px',
+                      height: '16px'
                     }}
                   />
-                  Light Mode
-                </label>
+                </div>
+
                 <div style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  fontSize: '0.95rem',
-                  color: darkMode ? '#ffffff' : '#333333',
-                  fontWeight: '500',
+                  justifyContent: 'space-between',
+                  padding: '2px 4px',
+                  backgroundColor: '#1e1e1e',
+                  borderRadius: '3px',
                 }}>
-                  <span>Unit:</span>
+                  <span style={{ color: '#fff', fontWeight: '500', fontSize: '0.85rem' }}>Unit</span>
                   <select
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
                     style={{
-                      padding: '8px 12px',
-                      backgroundColor: darkMode ? '#333333' : '#f5f5f5',
-                      color: darkMode ? '#ffffff' : '#333333',
-                      border: `1px solid ${darkMode ? '#444444' : '#dddddd'}`,
-                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      backgroundColor: '#252525',
+                      color: '#fff',
+                      border: '1px solid #444',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       fontWeight: '500',
-                      width: '120px',
-                      boxShadow: darkMode ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)',
+                      width: '80px',
+                      fontSize: '0.85rem'
                     }}
                   >
                     <option value="Meters">Meters</option>
@@ -1102,12 +1081,10 @@ const getWallLength = (wall) => {
                   return (
                     <React.Fragment key={`wall-label-${i}`}>
                       <Line
-  points={[wall.x1, wall.y1, wall.x2, wall.y2]}
-  stroke={wall.type === 'room' ? 'purple' : 'gray'}
-  strokeWidth={2}
-/>
-
-
+                        points={[wall.x1, wall.y1, wall.x2, wall.y2]}
+                        stroke={wall.type === 'room' ? 'purple' : 'gray'}
+                        strokeWidth={2}
+                      />
                       <Text
                         x={midX - textWidth / 2}
                         y={Math.max(midY, 10)}
@@ -1161,10 +1138,6 @@ const getWallLength = (wall) => {
       </div>
     </>
   );
-  
-  
-
-  
 }
 
 export default DrawingBoard;
