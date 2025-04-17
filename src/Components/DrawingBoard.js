@@ -9,12 +9,37 @@ import { FiDownload, FiGrid, FiBox, FiTrash2, FiRotateCcw, FiRotateCw } from 're
 import ThreeDCanvas from "./ThreeDCanvas";
 import "./DrawingBoard.css";
 import { FloorPlanContext } from '../context/FloorPlanContext';
+import { Rect } from 'react-konva';
+
 
 // Global constants
 const GRID_SPACING = 20;
 const PROXIMITY_THRESHOLD = 25;
 
 const SIDEBAR_WIDTH = 280;
+
+function distanceToSegment(point, wall) {
+  const { x1, y1, x2, y2 } = wall;
+  const A = point.x - x1;
+  const B = point.y - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+
+  const dot = A * C + B * D;
+  const lenSq = C * C + D * D;
+  let param = dot / lenSq;
+
+  if (param < 0) param = 0;
+  else if (param > 1) param = 1;
+
+  const xx = x1 + param * C;
+  const yy = y1 + param * D;
+  const dx = point.x - xx;
+  const dy = point.y - yy;
+
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
 
 function DrawingBoard() {
   // Shared floor plan context
@@ -176,6 +201,9 @@ useEffect(() => {
       console.error("Error downloading floor plan:", error);
     }
   }, [stageRef]); // Add stageRef to dependency array
+
+
+  
   
   
   
@@ -222,18 +250,17 @@ useEffect(() => {
       { id: 'beam', icon: '', label: 'Beam', action: () => handleToolSelect('beam') },
       { id: 'stairs', icon: '', label: 'Stairs', action: () => handleToolSelect('stairs') },
       { id: 'railing', icon: '', label: 'Railing', action: () => handleToolSelect('railing') },
-      { id: 'ceiling', icon: '', label: 'Ceiling', action: () => handleToolSelect('ceiling') },
+      
     ],
     
     // Doors & Windows
     doors: [
       { id: 'door', icon: '', label: 'Door', action: () => handleToolSelect('door') },
       { id: 'sliding-door', icon: '', label: 'Sliding Door', action: () => handleToolSelect('sliding-door') },
-      { id: 'french-door', icon: '', label: 'French Door', action: () => handleToolSelect('french-door') },
       { id: 'window', icon: '', label: 'Window', action: () => handleToolSelect('window') },
-      { id: 'bay-window', icon: '', label: 'Bay Window', action: () => handleToolSelect('bay-window') },
-      { id: 'skylight', icon: '', label: 'Skylight', action: () => handleToolSelect('skylight') },
+      
     ],
+    
     
     // Furniture
     furniture: [
@@ -245,8 +272,7 @@ useEffect(() => {
       { id: 'chair', icon: '', label: 'Chair', action: () => handleToolSelect('chair') },
       { id: 'bookshelf', icon: '', label: 'Bookshelf', action: () => handleToolSelect('bookshelf') },
       { id: 'wardrobe', icon: '', label: 'Wardrobe', action: () => handleToolSelect('wardrobe') },
-      { id: 'dresser', icon: '', label: 'Dresser', action: () => handleToolSelect('dresser') },
-      { id: 'nightstand', icon: '', label: 'Nightstand', action: () => handleToolSelect('nightstand') },
+     
     ],
     
     // Kitchen & Bath
@@ -307,11 +333,11 @@ useEffect(() => {
       'french-door': 180,
       'window': 90,
       'bay-window': 180,
-      'sofa': 200,
-      'sectional': 250,
-      'table': 120,
-      'desk': 150,
-      'bed': 200,
+      'sofa': 60,
+      'sectional': 80,
+      'table': 60,
+      'desk': 80,
+      'bed': 80,
       'chair': 60,
       'bookshelf': 100,
       'kitchen': 240,
@@ -324,7 +350,7 @@ useEffect(() => {
       'shower': 90,
       'toilet': 60,
       'vanity': 100,
-      'wardrobe': 120,
+      'wardrobe': 60,
       'dresser': 100,
       'nightstand': 50,
       'deck': 400,
@@ -348,13 +374,13 @@ useEffect(() => {
       'door': 210,
       'sliding-door': 210,
       'french-door': 210,
-      'window': 120,
+      'window': 15,
       'bay-window': 120,
-      'sofa': 100,
-      'sectional': 200,
-      'table': 80,
-      'desk': 70,
-      'bed': 200,
+      'sofa': 30,
+      'sectional': 30,
+      'table': 40,
+      'desk': 40,
+      'bed': 50,
       'chair': 60,
       'bookshelf': 40,
       'kitchen': 60,
@@ -367,7 +393,7 @@ useEffect(() => {
       'shower': 90,
       'toilet': 70,
       'vanity': 60,
-      'wardrobe': 60,
+      'wardrobe': 20,
       'dresser': 50,
       'nightstand': 50,
       'deck': 400,
@@ -390,6 +416,8 @@ useEffect(() => {
       x: Math.round(pos.x / GRID_SPACING) * GRID_SPACING,
       y: Math.round(pos.y / GRID_SPACING) * GRID_SPACING,
     };
+
+    
   
     const snappedOrConnected = findNearbyEndpoint(rawSnapped.x, rawSnapped.y, walls) || rawSnapped;
   
@@ -403,7 +431,19 @@ useEffect(() => {
       });
       console.log(`Started drawing ${currentTool}`);
     } else if (["door", "sliding-door", "french-door", "window", "bay-window", "skylight"].includes(currentTool)) {
-      // For doors and windows, start drawing a line to set dimensions
+      // 🪟 Block drawing window if not near a wall
+      if (currentTool === "window") {
+        const nearWall = walls.some(wall => {
+          return distanceToSegment(snappedOrConnected, wall) < 20;
+        });
+    
+        if (!nearWall) {
+          console.log("❌ Cannot place window — must touch a wall.");
+          return;
+        }
+      }
+    
+      // Proceed normally
       setIsDrawing(true);
       setCurrentLine({
         x1: snappedOrConnected.x,
@@ -412,7 +452,8 @@ useEffect(() => {
         y2: snappedOrConnected.y,
         type: currentTool
       });
-    } else {
+    }
+     else {
       // For all other elements (furniture, fixtures, etc), add directly at click position
       addStructure({
         type: currentTool,
@@ -632,7 +673,8 @@ const getWallLength = (wall) => {
     // Structure color mappings
     const colors = {
       // Door types
-      'door': { stroke: '#8B4513', fill: '#CD853F' },
+      'door': { stroke: '#A0522D', fill: '#F5DEB3' }, // wheat color
+
       'sliding-door': { stroke: '#8B4513', fill: '#DAA520' },
       'french-door': { stroke: '#8B4513', fill: '#B8860B' },
       
@@ -702,6 +744,512 @@ const getWallLength = (wall) => {
     const colorSet = colors[structure.type] || colors.default;
     
     switch (structure.type) {
+      case 'wardrobe': {
+        const x = structure.x;
+        const y = structure.y;
+        const w = structure.width;
+        const h = structure.height;
+      
+        const doorColor = '#D2B48C'; // tan wood color
+        const borderColor = '#8B4513'; // darker brown for outline
+        const handleColor = '#444';
+      
+        return (
+          <>
+            {/* Main frame */}
+            <Rect
+              x={x}
+              y={y}
+              width={w}
+              height={h}
+              fill={doorColor}
+              stroke={borderColor}
+              strokeWidth={2}
+              cornerRadius={2}
+            />
+            
+            {/* Divider line for doors */}
+            <Line
+              points={[x + w / 2, y, x + w / 2, y + h]}
+              stroke={borderColor}
+              strokeWidth={1}
+            />
+      
+            {/* Left handle */}
+            <Rect
+              x={x + w / 2 - 10}
+              y={y + h / 2 - 4}
+              width={4}
+              height={8}
+              fill={handleColor}
+              cornerRadius={2}
+            />
+      
+            {/* Right handle */}
+            <Rect
+              x={x + w / 2 + 6}
+              y={y + h / 2 - 4}
+              width={4}
+              height={8}
+              fill={handleColor}
+              cornerRadius={2}
+            />
+          </>
+        );
+      }
+      
+      case 'bookshelf': {
+        const { x, y, width, height } = structure;
+      
+        const frameColor = '#8b4513'; // SaddleBrown frame
+        const shelfColor = '#deb887'; // Lighter wood inside
+        const bookColors = ['#d2691e', '#cd5c5c', '#6a5acd', '#20b2aa'];
+      
+        const shelfCount = 4;
+        const shelfHeight = (height - 10) / (shelfCount + 1);
+      
+        const shelfRects = Array.from({ length: shelfCount }).map((_, i) => (
+          <Rect
+            key={`shelf-${i}`}
+            x={x + 4}
+            y={y + (i + 1) * shelfHeight}
+            width={width - 8}
+            height={2}
+            fill={frameColor}
+          />
+        ));
+      
+        const bookRects = Array.from({ length: shelfCount }).flatMap((_, row) => {
+          const bookWidth = (width - 16) / 3;
+          return [0, 1, 2].map((col) => (
+            <Rect
+              key={`book-${row}-${col}`}
+              x={x + 6 + col * (bookWidth + 2)}
+              y={y + (row + 1) * shelfHeight - 6}
+              width={bookWidth}
+              height={6}
+              fill={bookColors[(row + col) % bookColors.length]}
+              cornerRadius={1}
+            />
+          ));
+        });
+      
+        return (
+          <>
+            {/* Outer frame */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={shelfColor}
+              stroke={frameColor}
+              strokeWidth={2}
+              cornerRadius={2}
+            />
+            
+            {/* Shelves */}
+            {shelfRects}
+      
+            {/* Books */}
+            {bookRects}
+          </>
+        );
+      }
+      
+      case 'chair': {
+        const { x, y, width, height } = structure;
+      
+        const seatColor = '#a0522d';     // SaddleBrown
+        const backrestColor = '#8b4513'; // Darker brown
+        const legColor = '#3e2f23';      // Dark legs
+      
+        const legSize = 4;
+        const seatPadding = 6;
+        const backrestHeight = 6;
+      
+        return (
+          <>
+            {/* Seat */}
+            <Rect
+              x={x + seatPadding}
+              y={y + seatPadding + backrestHeight}
+              width={width - seatPadding * 2}
+              height={height - seatPadding * 2 - backrestHeight}
+              fill={seatColor}
+              stroke="#654321"
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Backrest */}
+            <Rect
+              x={x + seatPadding}
+              y={y + seatPadding}
+              width={width - seatPadding * 2}
+              height={backrestHeight}
+              fill={backrestColor}
+              cornerRadius={1}
+            />
+      
+            {/* Legs (4 corners) */}
+            <Rect x={x + 2} y={y + height - legSize - 2} width={legSize} height={legSize} fill={legColor} />
+            <Rect x={x + width - legSize - 2} y={y + height - legSize - 2} width={legSize} height={legSize} fill={legColor} />
+            <Rect x={x + 2} y={y + height - legSize * 3} width={legSize} height={legSize} fill={legColor} />
+            <Rect x={x + width - legSize - 2} y={y + height - legSize * 3} width={legSize} height={legSize} fill={legColor} />
+          </>
+        );
+      }
+      
+      case 'desk': {
+        const { x, y, width, height } = structure;
+      
+        const surfaceColor = '#3a3a3a';      // Darker desk top
+        const legColor = '#222222';         // Legs
+        const drawerColor = '#555555';      // Left drawer block
+        const handleColor = '#aaaaaa';
+      
+        const legSize = 5;
+      
+        return (
+          <>
+            {/* Desk surface */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={surfaceColor}
+              stroke="#1e1e1e"
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Legs (4 corners) */}
+            <Rect x={x + 2} y={y + 2} width={legSize} height={legSize} fill={legColor} />
+            <Rect x={x + width - legSize - 2} y={y + 2} width={legSize} height={legSize} fill={legColor} />
+            <Rect x={x + 2} y={y + height - legSize - 2} width={legSize} height={legSize} fill={legColor} />
+            <Rect x={x + width - legSize - 2} y={y + height - legSize - 2} width={legSize} height={legSize} fill={legColor} />
+      
+            {/* Left drawer block */}
+            <Rect
+              x={x + 4}
+              y={y + 4}
+              width={width / 3.5}
+              height={height - 8}
+              fill={drawerColor}
+              cornerRadius={1}
+            />
+      
+            {/* Handle lines */}
+            <Line
+              points={[
+                x + 10, y + height / 3,
+                x + width / 3.5 - 10, y + height / 3
+              ]}
+              stroke={handleColor}
+              strokeWidth={1}
+            />
+            <Line
+              points={[
+                x + 10, y + height * 2 / 3,
+                x + width / 3.5 - 10, y + height * 2 / 3
+              ]}
+              stroke={handleColor}
+              strokeWidth={1}
+            />
+          </>
+        );
+      }
+      
+      
+      case 'table': {
+        const { x, y, width, height } = structure;
+      
+        const legSize = 4;
+        const fillColor = "#a0522d"; // wood tone
+        const strokeColor = "#5e3d1c";
+      
+        return (
+          <>
+            {/* Tabletop */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={fillColor}
+              stroke={strokeColor}
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Table legs (small dots at corners) */}
+            <Rect x={x + 2} y={y + 2} width={legSize} height={legSize} fill="#3e2b1c" />
+            <Rect x={x + width - legSize - 2} y={y + 2} width={legSize} height={legSize} fill="#3e2b1c" />
+            <Rect x={x + 2} y={y + height - legSize - 2} width={legSize} height={legSize} fill="#3e2b1c" />
+            <Rect x={x + width - legSize - 2} y={y + height - legSize - 2} width={legSize} height={legSize} fill="#3e2b1c" />
+          </>
+        );
+      }
+      
+      case 'bed': {
+        const { x, y, width, height } = structure;
+      
+        const blanketHeight = height * 0.65;
+        const pillowHeight = 8;
+        const pillowWidth = width * 0.35;
+        const headboardHeight = 6;
+      
+        return (
+          <>
+            {/* Blanket */}
+            <Rect
+              x={x}
+              y={y + headboardHeight}
+              width={width}
+              height={blanketHeight}
+              fill="#4caf50" // green blanket
+              stroke="#2e7d32"
+              strokeWidth={1}
+              cornerRadius={3}
+            />
+      
+            {/* Pillow */}
+            <Rect
+              x={x + (width - pillowWidth) / 2}
+              y={y + headboardHeight + 2}
+              width={pillowWidth}
+              height={pillowHeight}
+              fill="#fff176" // yellow pillow
+              stroke="#fdd835"
+              strokeWidth={0.5}
+              cornerRadius={3}
+            />
+      
+            {/* Headboard */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={headboardHeight}
+              fill="#8d4b24" // brown headboard
+              stroke="#5d2e0e"
+              strokeWidth={1}
+            />
+          </>
+        );
+      }
+      
+      
+      case 'sectional': {
+        const { x, y, width, height } = structure;
+      
+        const longLength = width * 0.65;
+        const shortLength = height * 0.7;
+        const armWidth = 5;
+        const cushionSize = 10;
+      
+        const fillColor = "#a9a9a9";
+        const pillowColor = "#c0c0c0";
+      
+        return (
+          <>
+            {/* Long section base */}
+            <Rect
+              x={x}
+              y={y}
+              width={longLength}
+              height={height}
+              fill={fillColor}
+              stroke="#666"
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Short section base (L) */}
+            <Rect
+              x={x}
+              y={y - shortLength}
+              width={width * 0.4}
+              height={shortLength}
+              fill={fillColor}
+              stroke="#666"
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Pillows on long section */}
+            {[0, 1].map((i) => (
+              <Rect
+                key={`lpillow-${i}`}
+                x={x + 10 + i * (cushionSize + 4)}
+                y={y + 4}
+                width={cushionSize}
+                height={cushionSize}
+                fill={pillowColor}
+                cornerRadius={2}
+              />
+            ))}
+      
+            {/* Pillows on short section */}
+            {[0].map((i) => (
+              <Rect
+                key={`spillow-${i}`}
+                x={x + 4}
+                y={y - shortLength + 8}
+                width={cushionSize}
+                height={cushionSize}
+                fill={pillowColor}
+                cornerRadius={2}
+              />
+            ))}
+      
+            {/* Armrests */}
+            <Rect
+              x={x}
+              y={y}
+              width={armWidth}
+              height={height}
+              fill="#888"
+            />
+            <Rect
+              x={x}
+              y={y - shortLength}
+              width={width * 0.4}
+              height={armWidth}
+              fill="#888"
+            />
+          </>
+        );
+      }
+      
+      case 'sofa': {
+        const { x, y, width, height } = structure;
+      
+        const cushionGap = 4;
+        const pillowHeight = height / 2.2;
+        const cushionHeight = height / 2.2;
+        const armWidth = 12;
+      
+        return (
+          <React.Fragment key={structure.id}>
+            {/* Sofa Base */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill="#b22222"
+              stroke="#7a1f1f"
+              strokeWidth={2}
+              cornerRadius={5}
+            />
+      
+            {/* Cushions */}
+            <Rect
+              x={x + armWidth}
+              y={y + height - cushionHeight - 5}
+              width={(width - armWidth * 2 - cushionGap) / 2}
+              height={cushionHeight}
+              fill="#dc143c"
+              cornerRadius={4}
+            />
+            <Rect
+              x={x + armWidth + (width - armWidth * 2 - cushionGap) / 2 + cushionGap}
+              y={y + height - cushionHeight - 5}
+              width={(width - armWidth * 2 - cushionGap) / 2}
+              height={cushionHeight}
+              fill="#dc143c"
+              cornerRadius={4}
+            />
+      
+            {/* Back Pillows */}
+            {[0, 1, 2].map((i) => (
+              <Rect
+                key={`pillow-${i}`}
+                x={x + armWidth + i * ((width - armWidth * 2) / 3)}
+                y={y + 5}
+                width={(width - armWidth * 2) / 3 - 2}
+                height={pillowHeight}
+                fill="#e34234"
+                cornerRadius={6}
+              />
+            ))}
+      
+            {/* Armrests */}
+            <Rect
+              x={x}
+              y={y}
+              width={armWidth}
+              height={height}
+              fill="#a52a2a"
+              cornerRadius={8}
+            />
+            <Rect
+              x={x + width - armWidth}
+              y={y}
+              width={armWidth}
+              height={height}
+              fill="#a52a2a"
+              cornerRadius={8}
+            />
+          </React.Fragment>
+        );
+      }
+      
+      case 'window': {
+        const x = Math.min(structure.x1 || structure.x, structure.x2 ?? structure.x + structure.width);
+        const y = Math.min(structure.y1 || structure.y, structure.y2 ?? structure.y + structure.height);
+        const width = Math.abs((structure.x2 ?? structure.x + structure.width) - (structure.x1 ?? structure.x));
+        const height = structure.height || 100;
+        const frameColor = '#1E90FF'; // Frame color
+        const glassColor = 'rgba(135, 206, 250, 0.35)'; // Glass color
+      
+        return (
+          <>
+            {/* Outer Frame */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              stroke={frameColor}
+              strokeWidth={2}
+              cornerRadius={2}
+            />
+            
+            {/* Glass Pane */}
+            <Rect
+              x={x + 2}
+              y={y + 2}
+              width={width - 4}
+              height={height - 4}
+              fill={glassColor}
+              stroke="#87CEEB"
+              strokeWidth={1}
+            />
+      
+            {/* Divider */}
+            {width > height ? (
+              <Line
+                points={[x + width / 2, y, x + width / 2, y + height]}
+                stroke={frameColor}
+                strokeWidth={1}
+                dash={[3, 3]}
+              />
+            ) : (
+              <Line
+                points={[x, y + height / 2, x + width, y + height / 2]}
+                stroke={frameColor}
+                strokeWidth={1}
+                dash={[3, 3]}
+              />
+            )}
+          </>
+        );
+      }
+      
       case 'room':
         return (
           <Line
@@ -712,6 +1260,115 @@ const getWallLength = (wall) => {
             closed
           />
         );
+
+        case 'sliding-door': {
+          const x = Math.min(structure.x1 || structure.x, (structure.x2 !== undefined ? structure.x2 : structure.x + structure.width));
+          const y = Math.min(structure.y1 || structure.y, (structure.y2 !== undefined ? structure.y2 : structure.y + structure.height));
+          const width = Math.abs((structure.x2 ?? structure.x + structure.width) - (structure.x1 ?? structure.x));
+          const height = structure.height || 100;
+
+        
+          const panelWidth = width / 2;
+        
+          return (
+            <>
+              {/* Sliding Door Track */}
+              <Rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                stroke="#deb887"
+                strokeWidth={2}
+                cornerRadius={2}
+              />
+        
+              {/* Left Glass Panel */}
+              <Rect
+                x={x}
+                y={y}
+                width={panelWidth}
+                height={height}
+                fill="rgba(135, 206, 235, 0.35)"
+                stroke="#87ceeb"
+                strokeWidth={1}
+              />
+        
+              {/* Right Glass Panel */}
+              <Rect
+                x={x + panelWidth}
+                y={y}
+                width={panelWidth}
+                height={height}
+                fill="rgba(135, 206, 235, 0.35)"
+                stroke="#87ceeb"
+                strokeWidth={1}
+              />
+        
+              {/* Divider Line */}
+              <Line
+                points={[
+                  x + panelWidth, y,
+                  x + panelWidth, y + height
+                ]}
+                stroke="#444"
+                strokeWidth={2}
+                dash={[4, 3]}
+              />
+            </>
+          );
+        }
+        
+        
+        
+
+        case 'door': {
+          const knobRadius = 4;
+          const knobX = structure.x + structure.width - knobRadius * 2;
+          const knobY = structure.y + structure.height / 2;
+        
+          return (
+            <>
+              {/* Door rectangle */}
+              <Rect
+                key={structure.id}
+                x={structure.x}
+                y={structure.y}
+                width={structure.width}
+                height={structure.height}
+                fill="#a0522d"
+                stroke="#5e3d1c"
+                strokeWidth={2}
+                cornerRadius={2}
+              />
+        
+              {/* Knob */}
+              <Rect
+                x={knobX}
+                y={knobY}
+                width={knobRadius * 2}
+                height={knobRadius * 2}
+                fill="#333"
+                cornerRadius={knobRadius}
+                shadowBlur={2}
+                shadowColor="#000"
+              />
+        
+              {/* Hinge line (optional) */}
+              <Line
+                points={[
+                  structure.x, structure.y,
+                  structure.x, structure.y + structure.height
+                ]}
+                stroke="#8b4513"
+                strokeWidth={1}
+                dash={[4, 3]}
+              />
+            </>
+          );
+        }
+        
+
 
         case 'stairs':
           const steps = 5;
@@ -1110,8 +1767,8 @@ const getWallLength = (wall) => {
              y1: wall.y1,
              x2: wall.x2,
              y2: wall.y2,
-             height: 30,
-             thickness: 2,
+             height: 250,
+             thickness: 1000000,
              type: wall.type, 
            }))}
            structures={structures}
@@ -1129,6 +1786,8 @@ const getWallLength = (wall) => {
               onMouseUp={handleDrawEnd}
               onDblClick={handleDoubleClick}
             >
+
+              
               <Layer>
               {snapPoint && (
   <React.Fragment>
@@ -1144,6 +1803,8 @@ const getWallLength = (wall) => {
     />
   </React.Fragment>
 )}
+
+
 
                 {showGrid && renderGrid()}
                 {walls.map((wall, i) => {

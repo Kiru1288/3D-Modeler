@@ -20,6 +20,11 @@ import { useLoader } from '@react-three/fiber';
 import stoneWallImg from '../Assets/stone-wall.jpg';
 import whiteWallImg from '../Assets/white-wall-textures.jpg';
 import brickWallImg from '../Assets/brick_4_diff_4k.jpg';
+import patternedDoorImg from '../Assets/full-frame-shot-patterned-wall_1048944-16000472.avif';
+import { Group, Rect } from 'react-konva';
+
+
+
 
 
 
@@ -153,6 +158,9 @@ const MATERIALS = {
   
 };
 
+const SCALE = 0.01; // 1 unit in 2D = 1m → In 3D, scale it to 1/100
+
+
 // -----------------------
 // Materials with textures
 // -----------------------
@@ -222,6 +230,9 @@ const initializePlaceholderMaterials = () => {
     MATERIALS.WALL_WOOD = woodMaterial;
     MATERIALS.FURNITURE_TABLE = woodMaterial.clone();
     MATERIALS.FURNITURE_CHAIR = woodMaterial.clone();
+    
+    
+    
     
     console.log("Textures loaded successfully");
   } catch (error) {
@@ -362,14 +373,15 @@ if (wall.type === "room") {
             return (
               <>
                 {console.log(`🧱 Wall ${i}: (${wall.x1}, ${wall.y1}) to (${wall.x2}, ${wall.y2})`)}
-                <Wall 
+               <Wall 
   key={i} 
   {...wall} 
-  height={150} 
-  thickness={5}
+  height={150}     // closer to door height
+  thickness={10}   // thinner and not intrusive
   type={wall.type}
   material={wallMaterial}
 />
+
 
               </>
             );
@@ -535,7 +547,8 @@ const CameraPathPreview = ({ pathPoints = [], enabled, speed = 2, onEnd, control
       ref={walkthroughCamera}
       makeDefault
       fov={60}
-      position={[0, 10, 0]} // This will be replaced on mount
+      position={[0, 10, 0]} 
+      far={100000}// This will be replaced on mount
     />
   );
 };
@@ -547,6 +560,10 @@ const CameraPathPreview = ({ pathPoints = [], enabled, speed = 2, onEnd, control
   
   
 
+const getWallRotationFromCoords = (x1, y1, x2, y2) => {
+  const angle = Math.atan2(y2 - y1, x2 - x1); // direction in radians
+  return angle;
+};
   
 const snapWalls = (walls, threshold = 10) => {
   if (!walls || walls.length === 0) {
@@ -640,9 +657,15 @@ const DynamicCamera = ({ walls }) => {
 const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => {
   // Create sample walls if none provided
   const effectiveWalls = walls.length > 0 ? walls : [];
+  const doorTexture = useLoader(THREE.TextureLoader, patternedDoorImg);
+doorTexture.wrapS = doorTexture.wrapT = THREE.RepeatWrapping;
+doorTexture.repeat.set(1, 1);
+
 
   
   const snappedWalls = snapWalls(effectiveWalls);
+  window.walls = snappedWalls;
+
   const canvasRef = React.useRef(null);
   const controlsRef = React.useRef(); 
   const [walkThroughPath, setWalkThroughPath] = React.useState([]);
@@ -811,6 +834,7 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
   
     const camera = controls.object;
     const speed = 1.5; // adjust to desired speed
+    
   
     // Move in world directions (not camera-relative)
     const move = new THREE.Vector3(x * speed, 0, y * speed);
@@ -826,6 +850,8 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
       console.warn("⚠️ OrbitControls not ready");
       return;
     }
+
+    
   
     const rotateSpeed = 0.05;
   
@@ -865,23 +891,28 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
           stencil: false,
           preserveDrawingBuffer: true
         }} 
-        camera={{ fov: 45, near: 0.1, far: 200000 }}
+        camera={{ fov: 45, near: 10, far: 200000 }}
         ref={canvasRef}
         style={{ background: "#b3d9ff" }} // Soft light blue matching screenshot
         dpr={[1, 2]} // Responsive pixel ratio
       >
         {/* Simple sky settings */}
-        <Sky 
-          distance={450000}
-          sunPosition={[0, 1, 0]} 
-          inclination={0.6}
-          azimuth={0.25}
-          rayleigh={0.01} 
-          turbidity={0.01} 
-          mieCoefficient={0.0001}
-          mieDirectionalG={0.8}
-          exposure={1.0}
-        />
+        <Sky
+  distance={5000}
+  sunPosition={[0, 1, 0]}
+  inclination={0.6}
+  azimuth={0.25}
+  rayleigh={0.01}
+  turbidity={0.01}
+  mieCoefficient={0.0001}
+  mieDirectionalG={0.8}
+  exposure={1.0}
+  renderOrder={-10}
+  material-transparent
+  material-depthWrite={false}
+/>
+
+
 
         {/* Enhanced lighting setup */}
         <ambientLight intensity={0.8} />
@@ -956,14 +987,44 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
           switch (structure.type) {
             case "window":
             case "bay-window":
+              let rotationY = 0;
+let nearestWall = null;
+let minDistance = Infinity;
+
+// Loop through walls and find the nearest one
+snappedWalls.forEach(wall => {
+  if (!wall.x1 || !wall.y1 || !wall.x2 || !wall.y2) return;
+
+  const wallMidX = (wall.x1 + wall.x2) / 2;
+  const wallMidY = (wall.y1 + wall.y2) / 2;
+
+  const dist = Math.hypot(structure.x - wallMidX, structure.y - wallMidY);
+
+  if (dist < minDistance) {
+    minDistance = dist;
+    nearestWall = wall;
+  }
+});
+
+if (nearestWall) {
+  const dx = nearestWall.x2 - nearestWall.x1;
+  const dy = nearestWall.y2 - nearestWall.y1;
+  rotationY = Math.atan2(dy, dx);
+}
+
               return (
                 <Window
-                  key={i}
-                  position={[structure.x, 15, -structure.y]} 
-                  size={{ width: structure.width, height: structure.height }}
-                  rotation={[0, structure.rotation || 0, 0]}
-                  type={structure.type}
-                />
+                key={i}
+                position={[structure.x, 75, -structure.y]} // elevate to mid-wall
+                size={{ 
+                  width: structure.width * 0.6,   // narrower
+                  height: structure.height * 0.5  // shorter
+                }}
+                rotation={[0, structure.rotation || 0, 0]}
+                type={structure.type}
+              />
+              
+              
               );
               
             case "skylight":
@@ -976,15 +1037,136 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
                 </group>
               );
               
-            case "door":
-            case "sliding-door":
-            case "french-door":
-              // Ensure door has valid x and y coordinates
-              if (typeof structure.x !== 'number' || typeof structure.y !== 'number') {
-                return null;
-              }
-              // Pass all properties to Door component with type
-              return <Door key={i} {...structure} doorType={structure.type} />;
+case "door":
+case "french-door":
+case "sliding-door": {
+  const is2D = !is3DMode;
+  const doorWidth = structure.width || 60;
+  const doorHeight = structure.height || 20;
+
+  if (is2D && structure.type === "sliding-door") {
+    return (
+      <Group key={i}>
+        <Rect
+          x={structure.x - doorWidth / 2}
+          y={structure.y - doorHeight / 2}
+          width={doorWidth}
+          height={doorHeight}
+          stroke="#deb887"
+          strokeWidth={2}
+          dash={[4, 2]}
+        />
+        <Rect
+          x={structure.x - doorWidth / 2}
+          y={structure.y - doorHeight / 2}
+          width={doorWidth / 2}
+          height={doorHeight}
+          fill="rgba(135, 206, 235, 0.3)"
+        />
+        <Rect
+          x={structure.x}
+          y={structure.y - doorHeight / 2}
+          width={doorWidth / 2}
+          height={doorHeight}
+          fill="rgba(135, 206, 235, 0.3)"
+        />
+      </Group>
+    );
+  }
+
+  // 3D Mode logic for all door types
+  let rotationY = 0;
+  let nearestWall = null;
+  let minDistance = Infinity;
+
+  snappedWalls.forEach(wall => {
+    if (!wall.x1 || !wall.y1 || !wall.x2 || !wall.y2) return;
+    const mx = (wall.x1 + wall.x2) / 2;
+    const my = (wall.y1 + wall.y2) / 2;
+    const dist = Math.hypot(structure.x - mx, structure.y - my);
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearestWall = wall;
+    }
+  });
+
+  if (nearestWall) {
+    rotationY = getWallRotationFromCoords(
+      nearestWall.x1,
+      nearestWall.y1,
+      nearestWall.x2,
+      nearestWall.y2
+    );
+  }
+
+  if (structure.type === "sliding-door") {
+    const displayHeight = structure.height * 0.3; // Scaled down height
+    const displayWidth = structure.width;
+    const frameDepth = 6;
+  
+    return (
+      <group
+        key={i}
+        position={[structure.x, displayHeight / 2, -structure.y]}
+        rotation={[0, rotationY, 0]}
+      >
+        {/* Frame */}
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[displayWidth, displayHeight, frameDepth]} />
+          <meshStandardMaterial color="#deb887" />
+        </mesh>
+  
+        {/* Sliding glass pane (left) */}
+        <mesh position={[-displayWidth / 4, 0, 3]}>
+          <boxGeometry args={[displayWidth / 2 - 4, displayHeight - 10, 2]} />
+          <meshPhysicalMaterial
+            color="#87CEEB"
+            transmission={0.7}
+            transparent
+            opacity={0.3}
+            roughness={0.05}
+            metalness={0.1}
+          />
+        </mesh>
+  
+        {/* Sliding glass pane (right) */}
+        <mesh position={[displayWidth / 4, 0, 3]}>
+          <boxGeometry args={[displayWidth / 2 - 4, displayHeight - 10, 2]} />
+          <meshPhysicalMaterial
+            color="#87CEEB"
+            transmission={0.7}
+            transparent
+            opacity={0.3}
+            roughness={0.05}
+            metalness={0.1}
+          />
+        </mesh>
+      </group>
+    );
+  }
+  
+
+  // Default door and french door
+  return (
+    <group
+      key={i}
+      position={[structure.x, (structure.height / 2) + 0.5, -structure.y]}
+      rotation={[0, rotationY, 0]}
+    >
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[60, 140, 6]} />
+        <meshStandardMaterial map={doorTexture} />
+      </mesh>
+
+      <mesh position={[25, 70, 4]}>
+        <sphereGeometry args={[3, 16, 16]} />
+        <meshStandardMaterial color="#222" metalness={0.6} roughness={0.3} />
+      </mesh>
+    </group>
+  );
+}
+
+                
               
             // Furniture items
             case "table":
@@ -1111,36 +1293,33 @@ const ThreeDCanvas = ({ walls = [], structures = [], moves = [], is3DMode }) => 
 const Floor = () => {
   const grassTexture = useLoader(THREE.TextureLoader, grassTextureImg);
   grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
-  grassTexture.repeat.set(500, 500); // smooth size
+  grassTexture.repeat.set(1000, 1000); // Smoother, repeating look
   grassTexture.anisotropy = 16;
+  
 
   return (
     <group>
-      {/* Textured floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[100000, 100000]} />
-        <meshStandardMaterial map={grassTexture} side={THREE.DoubleSide} />
-      </mesh>
+       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, 0.5, 0]}>
+      {/* 🔁 Flat rectangle ground, not a circle */}
+      <planeGeometry args={[5000, 5000]} />
 
-      {/* Remove this — cylinder can hide camera view */}
-      {/* <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-        <cylinderGeometry args={[500000, 500000, 0.2, 64]} />
-        <meshStandardMaterial color="#c5e0b4" />
-      </mesh> */}
+      <meshStandardMaterial map={grassTexture} side={THREE.DoubleSide} />
+    </mesh>
 
-      {/* Optional: Grid overlay */}
+      {/* Optional: light grid pattern */}
       <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[100000, 100000, 200, 200]} />
-        <meshBasicMaterial 
+        <circleGeometry args={[500000, 128]} />
+        <meshBasicMaterial
           color="#b7d7a8"
           wireframe={true}
           transparent
-          opacity={0.2}
+          opacity={0.1}
         />
       </mesh>
     </group>
   );
 };
+
 
 
 

@@ -2,6 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
 
+const getWallRotationFromCoords = (x1, y1, x2, y2) => {
+  return Math.atan2(y2 - y1, x2 - x1);
+};
+
+
 
 // A general structure component that handles various furniture and room elements
 const Structure = ({ 
@@ -66,7 +71,7 @@ const Structure = ({
     bed: 30,
     table: 75,
     desk: 75,
-    bookshelf: 180,
+    bookshelf: 45,
     kitchen: 85,
     stove: 85,
     refrigerator: 180,
@@ -78,7 +83,7 @@ const Structure = ({
     toilet: 40,
     sink: 85,
     vanity: 85,
-    wardrobe: 180,
+    wardrobe: 90,
     dresser: 90,
     nightstand: 60,
     lamp: 150,
@@ -251,6 +256,60 @@ const Structure = ({
             </mesh>
           </group>
         );
+        case 'door':
+          return (
+            <group>
+              {/* Door frame */}
+              <mesh castShadow receiveShadow>
+                <boxGeometry args={[width, height, depth]} />
+                <meshStandardMaterial color="#A0522D" roughness={0.6} />
+              </mesh>
+        
+              {/* Handle */}
+              <mesh position={[width / 2 - 2, height / 4, depth / 2 + 0.5]} castShadow>
+                <cylinderGeometry args={[0.5, 0.5, 3, 16]} />
+                <meshStandardMaterial color="#333333" />
+              </mesh>
+            </group>
+          );
+          case 'sliding-door': {
+            let closestWall = null;
+            let closestDistance = Infinity;
+          
+            // This assumes you stored snapped walls globally
+            if (window.walls && Array.isArray(window.walls)) {
+              window.walls.forEach((wall) => {
+                if (!wall || wall.x1 === undefined) return;
+                const mx = (wall.x1 + wall.x2) / 2;
+                const my = (wall.y1 + wall.y2) / 2;
+                const dist = Math.hypot(x - mx, y - my);
+                if (dist < closestDistance) {
+                  closestDistance = dist;
+                  closestWall = wall;
+                }
+              });
+            }
+          
+            const autoRotation = closestWall
+              ? getWallRotationFromCoords(
+                  closestWall.x1,
+                  closestWall.y1,
+                  closestWall.x2,
+                  closestWall.y2
+                )
+              : rotation;
+          
+            return (
+              <group position={[x, structureHeight / 2, -y]} rotation={[0, autoRotation, 0]}>
+                <mesh castShadow receiveShadow>
+                  <boxGeometry args={[width, height, depth]} />
+                  <meshStandardMaterial color="#A0522D" roughness={0.6} />
+                </mesh>
+              </group>
+            );
+          }
+          
+        
         
       case 'desk':
         return (

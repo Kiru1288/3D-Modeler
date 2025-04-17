@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useLoader, useFrame } from '@react-three/fiber';
-import { TextureLoader } from 'three';
 import * as THREE from 'three';
-import doorTexture from '../../Assets/full-frame-shot-patterned-wall_1048944-16000472.avif';
+import doorTextureImg from '../../Assets/full-frame-shot-patterned-wall_1048944-16000472.avif';
+
 
 const Door = ({ 
   x = 0, 
@@ -20,208 +20,153 @@ const Door = ({
   const frameRef = useRef();
   const pivotRef = useRef();
   const targetRotation = useRef(0);
-  const texture = useLoader(TextureLoader, doorTexture);
 
-  // Convert position to 3D space (y is used as Z in 3D)
-  // Door bottom should be exactly at floor level
+  const doorTexture = useLoader(THREE.TextureLoader, doorTextureImg);
+  doorTexture.wrapS = doorTexture.wrapT = THREE.RepeatWrapping;
+  doorTexture.repeat.set(1, 1);
+
+  const doorMaterial = new THREE.MeshStandardMaterial({
+    map: doorTexture,
+    roughness: 0.6,
+    metalness: 0.2,
+  });
+
   const position = [x, height / 2, -y];
 
-  // Handle door click to open/close
   const handleDoorClick = (e) => {
     e.stopPropagation();
-    
+
     if (doorType === 'sliding-door') {
-      // Sliding doors slide to the side instead of rotating
       setIsOpen(!isOpen);
       setIsAnimating(true);
-      targetRotation.current = isOpen ? 0 : width * 0.8; // Slide most of the width
+      targetRotation.current = isOpen ? 0 : width * 0.8;
     } else {
-      // Regular and french doors rotate
       setIsOpen(!isOpen);
       setIsAnimating(true);
-      targetRotation.current = isOpen ? 0 : Math.PI / 2; // 90 degrees open
+      targetRotation.current = isOpen ? 0 : Math.PI / 2;
     }
   };
 
-  // Animation for door opening/closing
   useFrame(() => {
     if (!isAnimating) return;
 
     if (doorType === 'sliding-door' && doorRef.current) {
-      // Animation for sliding door
       const step = 4;
       const currentPos = doorRef.current.position.x;
       const targetPos = isOpen ? targetRotation.current : 0;
-      
+
       if (Math.abs(currentPos - targetPos) < step) {
         doorRef.current.position.x = targetPos;
         setIsAnimating(false);
         return;
       }
-      
-      if (currentPos < targetPos) {
-        doorRef.current.position.x += step;
-      } else {
-        doorRef.current.position.x -= step;
-      }
+
+      doorRef.current.position.x += currentPos < targetPos ? step : -step;
     } else if (pivotRef.current) {
-      // Animation for hinged doors
       const step = 0.05;
       const currentRot = pivotRef.current.rotation.y;
       const targetRot = targetRotation.current;
-      
+
       if (Math.abs(currentRot - targetRot) < step) {
         pivotRef.current.rotation.y = targetRot;
         setIsAnimating(false);
         return;
       }
-      
-      if (currentRot < targetRot) {
-        pivotRef.current.rotation.y += step;
-      } else {
-        pivotRef.current.rotation.y -= step;
-      }
+
+      pivotRef.current.rotation.y += currentRot < targetRot ? step : -step;
     }
   });
 
-  // Apply rotation based on the prop (for wall alignment)
   useEffect(() => {
     if (frameRef.current) {
       frameRef.current.rotation.y = rotation;
     }
   }, [rotation]);
 
-  // Render different door types
   const renderDoor = () => {
     switch (doorType) {
       case 'sliding-door':
         return (
           <group position={position} ref={frameRef}>
-            {/* Door frame */}
             <mesh receiveShadow>
               <boxGeometry args={[width + 10, height + 10, depth]} />
               <meshStandardMaterial color="#b76728" />
             </mesh>
-            
-            {/* Inner cutout */}
-            <mesh position={[0, 0, depth/2 + 0.1]}>
+            <mesh position={[0, 0, depth / 2 + 0.1]}>
               <boxGeometry args={[width - 10, height - 10, depth + 1]} />
               <meshStandardMaterial color="#000000" />
             </mesh>
-            
-            {/* Sliding door panel */}
-            <mesh 
+            <mesh
               ref={doorRef}
-              position={[0, 0, 0.01]} // Added slight Z-axis offset
-              castShadow 
+              position={[0, 0, 0.01]}
+              castShadow
               receiveShadow
               onClick={handleDoorClick}
             >
               <boxGeometry args={[width - 15, height - 15, depth - 2]} />
-              <meshStandardMaterial map={texture} color="#a87329" />
-              
-              {/* Door handle */}
-              <mesh position={[width/2 - 20, 0, depth/2]}>
+              <primitive object={doorMaterial} attach="material" />
+              <mesh position={[width / 2 - 20, 0, depth / 2]}>
                 <boxGeometry args={[5, 15, 3]} />
                 <meshStandardMaterial color="#d4af37" />
               </mesh>
             </mesh>
           </group>
         );
-        
+
       case 'french-door':
         return (
           <group position={position} ref={frameRef}>
-            {/* Door frame */}
             <mesh receiveShadow>
               <boxGeometry args={[width + 10, height + 10, depth]} />
               <meshStandardMaterial color="#b76728" />
             </mesh>
-            
-            {/* Inner cutout */}
-            <mesh position={[0, 0, depth/2 + 0.1]}>
+            <mesh position={[0, 0, depth / 2 + 0.1]}>
               <boxGeometry args={[width - 10, height - 10, depth + 1]} />
               <meshStandardMaterial color="#000000" />
             </mesh>
-            
-            {/* Left door panel */}
-            <group 
-              ref={pivotRef} 
-              position={[-width/4, 0, 0]}
-              onClick={handleDoorClick}
-            >
-              <mesh 
-                position={[-width/4, 0, 0]}
-                castShadow 
-                receiveShadow
-              >
-                <boxGeometry args={[width/2 - 5, height - 15, depth - 2]} />
-                <meshStandardMaterial map={texture} color="#a87329" />
-                
-                {/* Door handle */}
-                <mesh position={[width/4 - 10, 0, depth/2]}>
+            <group ref={pivotRef} position={[-width / 4, 0, 0]} onClick={handleDoorClick}>
+              <mesh position={[-width / 4, 0, 0]} castShadow receiveShadow>
+                <boxGeometry args={[width / 2 - 5, height - 15, depth - 2]} />
+                <primitive object={doorMaterial} attach="material" />
+                <mesh position={[width / 4 - 10, 0, depth / 2]}>
                   <boxGeometry args={[5, 15, 3]} />
                   <meshStandardMaterial color="#d4af37" />
                 </mesh>
               </mesh>
             </group>
-            
-            {/* Right door panel (static in this example) */}
-            <mesh 
-              position={[width/4, 0, 0.01]} // Added slight Z-axis offset
-              castShadow 
-              receiveShadow
-              onClick={handleDoorClick}
-            >
-              <boxGeometry args={[width/2 - 5, height - 15, depth - 2]} />
-              <meshStandardMaterial map={texture} color="#a87329" />
-              
-              {/* Door handle */}
-              <mesh position={[-width/4 + 10, 0, depth/2]}>
+            <mesh position={[width / 4, 0, 0.01]} castShadow receiveShadow>
+              <boxGeometry args={[width / 2 - 5, height - 15, depth - 2]} />
+              <primitive object={doorMaterial} attach="material" />
+              <mesh position={[-width / 4 + 10, 0, depth / 2]}>
                 <boxGeometry args={[5, 15, 3]} />
                 <meshStandardMaterial color="#d4af37" />
               </mesh>
             </mesh>
           </group>
         );
-      
-      default: // Regular hinged door
+
+      default:
         return (
           <group position={position} ref={frameRef}>
-            {/* Door frame */}
             <mesh receiveShadow>
               <boxGeometry args={[width + 10, height + 10, depth]} />
               <meshStandardMaterial color="#b76728" />
             </mesh>
-            
-            {/* Inner cutout for door */}
-            <mesh position={[0, 0, depth/2 + 0.1]}>
+            <mesh position={[0, 0, depth / 2 + 0.1]}>
               <boxGeometry args={[width - 10, height - 10, depth + 1]} />
               <meshStandardMaterial color="#000000" />
             </mesh>
-            
-            {/* Door pivot point - at edge of door */}
-            <group 
-              ref={pivotRef} 
-              position={[-width/2 + 5, 0, 0]} 
-              onClick={handleDoorClick}
-            >
-              {/* Door itself - positioned so it rotates around its edge */}
-              <mesh 
+            <group ref={pivotRef} position={[-width / 2 + 5, 0, 0]} onClick={handleDoorClick}>
+              <mesh
                 ref={doorRef}
-                position={[width/2 - 5, 0, 0.01]} // Added slight Z-axis offset
-                castShadow 
+                position={[width / 2 - 5, 0, 0.01]}
+                castShadow
                 receiveShadow
               >
                 <boxGeometry args={[width - 10, height - 10, depth - 2]} />
-                <meshStandardMaterial map={texture} color="#a87329" />
+                <primitive object={doorMaterial} attach="material" />
               </mesh>
-              
-              {/* Door handle */}
-              <mesh 
-                position={[width - 20, 0, depth/2]} 
-                castShadow
-              >
+              <mesh position={[width - 20, 0, depth / 2]} castShadow>
                 <boxGeometry args={[5, 15, 3]} />
                 <meshStandardMaterial color="#d4af37" />
               </mesh>
@@ -241,7 +186,7 @@ Door.propTypes = {
   height: PropTypes.number,
   depth: PropTypes.number,
   rotation: PropTypes.number,
-  doorType: PropTypes.string
+  doorType: PropTypes.string,
 };
 
 export default Door;
