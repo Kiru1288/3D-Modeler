@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
+import { RoundedBox } from '@react-three/drei';
+
 
 const getWallRotationFromCoords = (x1, y1, x2, y2) => {
   return Math.atan2(y2 - y1, x2 - x1);
@@ -74,8 +76,8 @@ const Structure = ({
     bookshelf: 45,
     kitchen: 85,
     stove: 85,
-    refrigerator: 180,
-    'kitchen-island': 85,
+    refrigerator: 75,
+    'kitchen-island': 23,
     counter: 85,
     cabinet: 85,
     bath: 40,
@@ -114,6 +116,119 @@ const Structure = ({
   // Structure-specific rendering
   const renderStructure = () => {
     switch(type) {
+
+      case 'sink': {
+        return (
+          <group position={[x, height / 2, -y]} rotation={[0, rotation, 0]}>
+            {/* Toilet Base */}
+            <mesh position={[0, -height / 2 - 20, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[width / 2.5, width / 2, height / 2, 32]} />
+              <meshStandardMaterial color="#f0f0f0" />
+            </mesh>
+      
+            {/* Toilet Seat */}
+            <mesh position={[0, -30, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[width / 2, width / 2.2, 6, 32]} />
+              <meshStandardMaterial color="#ffffff" metalness={0.2} roughness={0.3} />
+            </mesh>
+      
+            {/* Toilet Tank */}
+            <mesh position={[0, 0, -depth / 2 + 5]} castShadow receiveShadow>
+              <boxGeometry args={[width * 0.6, 20, 10]} />
+              <meshStandardMaterial color="#e0e0e0" />
+            </mesh>
+          </group>
+        );
+      }
+      
+
+      
+
+      case 'counter': {
+        return (
+          <group position={[x, height / 2, -y]} rotation={[0, rotation, 0]}>
+            {/* Counter Top */}
+            <mesh position={[0, -height - 10, 0]} castShadow receiveShadow>
+              <boxGeometry args={[width, 10, depth]} />
+              <meshStandardMaterial color="#a9a9a9" />
+            </mesh>
+      
+            {/* Base Cabinet */}
+            <mesh position={[0, -height - 25, 0]} castShadow receiveShadow>
+              <boxGeometry args={[width, height - 10, depth]} />
+              <meshStandardMaterial color="#deb887" />
+            </mesh>
+          </group>
+        );
+      }
+
+      case 'bath': {
+        return (
+          <group position={[x, -height / 2 + 10, -y]} rotation={[0, rotation, 0]}>
+            {/* Outer Tub - Rounded edges */}
+            <RoundedBox 
+              args={[width, height, depth]} 
+              radius={5} 
+              smoothness={4} 
+              castShadow 
+              receiveShadow
+            >
+              <meshStandardMaterial color="#e0e0e0" roughness={0.3} metalness={0.2} />
+            </RoundedBox>
+      
+            {/* Inner Basin */}
+            <mesh position={[0, 4, 0]} castShadow receiveShadow>
+              <boxGeometry args={[width - 12, height - 14, depth - 12]} />
+              <meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.1} />
+            </mesh>
+      
+            {/* Faucet */}
+            <mesh position={[0, height / 2 - 6, -depth / 2 + 6]} castShadow>
+              <cylinderGeometry args={[2, 2, 8, 16]} />
+              <meshStandardMaterial color="#777" metalness={0.9} roughness={0.1} />
+            </mesh>
+          </group>
+        );
+      }
+      
+      
+      
+      
+      
+
+      
+
+      case 'stove': {
+  return (
+    <group position={[x, height / 2, -y]} rotation={[0, rotation, 0]}>
+      {/* Stove Body */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[width, height, depth]} />
+        <meshStandardMaterial color="#3e3e3e" />
+      </mesh>
+
+      {/* Burners */}
+      {[1, -1].map((dx, i) =>
+        [1, -1].map((dz, j) => (
+          <mesh
+            key={`burner-${i}-${j}`}
+            position={[dx * (width / 4), height / 2, dz * (depth / 4)]}
+          >
+            <cylinderGeometry args={[4, 4, 2, 32]} />
+            <meshStandardMaterial color="#222" />
+          </mesh>
+        ))
+      )}
+
+      {/* Control Panel */}
+      <mesh position={[0, height / 2 + 4, depth / 2 - 2]}>
+        <boxGeometry args={[width * 0.9, 8, 4]} />
+        <meshStandardMaterial color="#555" />
+      </mesh>
+    </group>
+  );
+}
+
       case 'sofa':
         return (
           <group>
@@ -450,27 +565,38 @@ const Structure = ({
             </mesh>
           </group>
         );
+        case 'shower': {
+          return (
+            <group position={[x, -height * 3, -y]} rotation={[0, rotation, 0]}>
+              {/* Base Tray */}
+              <mesh position={[0, 1, 0]} castShadow receiveShadow>
+                <boxGeometry args={[width, 2, depth]} />
+                <meshStandardMaterial color="#ffffff" roughness={0.3} />
+              </mesh>
         
-      case 'shower':
-        return (
-          <group>
-            {/* Base */}
-            <mesh position={[0, 1, 0]} castShadow receiveShadow>
-              <boxGeometry args={[width, 2, height]} />
-              <meshStandardMaterial color="white" roughness={0.2} />
-            </mesh>
-            {/* Glass walls - transparent */}
-            <mesh position={[0, 100, 0]} castShadow receiveShadow>
-              <boxGeometry args={[width, 200, height]} />
-              <meshPhysicalMaterial color="#c0c0c0" transmission={0.8} transparent opacity={0.2} roughness={0} metalness={0.1} />
-            </mesh>
-            {/* Shower head */}
-            <mesh position={[0, 180, -height/2 + 10]} castShadow>
-              <cylinderGeometry args={[5, 5, 5, 16]} />
-              <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
-            </mesh>
-          </group>
-        );
+              {/* Transparent Glass Walls */}
+              <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
+                <boxGeometry args={[width, height, depth]} />
+                <meshPhysicalMaterial
+                  color="#c0c0c0"
+                  transmission={0.8}
+                  transparent
+                  opacity={0.15}
+                  roughness={0.1}
+                  metalness={0.1}
+                />
+              </mesh>
+        
+              {/* Shower Head */}
+              <mesh position={[0, height - 10, -depth / 2 + 8]} castShadow>
+                <cylinderGeometry args={[3, 3, 5, 16]} />
+                <meshStandardMaterial color="#999999" metalness={0.7} roughness={0.2} />
+              </mesh>
+            </group>
+          );
+        }
+        
+        
         
       case 'toilet':
         return (
@@ -596,38 +722,50 @@ const Structure = ({
           </group>
         );
 
-      case 'plant':
-        return (
-          <group>
-            {/* Pot */}
-            <mesh position={[0, -structureHeight/4, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[width/2, width/3, structureHeight/2, 16]} />
-              <meshStandardMaterial color="#A0522D" roughness={0.7} />
-            </mesh>
-            {/* Plant base */}
-            <mesh position={[0, 0, 0]} castShadow receiveShadow>
-              <sphereGeometry args={[width/1.5, 16, 16]} />
-              <meshStandardMaterial color={structureColor} roughness={0.9} />
-            </mesh>
-            {/* Plant details - small spheres for leaves */}
-            {[...Array(20)].map((_, i) => {
-              const radius = width/3;
-              const phi = Math.acos(-1 + (2 * i) / 20);
-              const theta = Math.sqrt(20 * Math.PI) * phi;
-              
-              const x = radius * Math.sin(phi) * Math.cos(theta);
-              const y = radius * Math.sin(phi) * Math.sin(theta) + radius/2;
-              const z = radius * Math.cos(phi);
-              
-              return (
-                <mesh key={i} position={[x, y, z]} castShadow>
-                  <sphereGeometry args={[width/10, 8, 8]} />
-                  <meshStandardMaterial color={structureColor} roughness={0.8} />
-                </mesh>
-              );
-            })}
-          </group>
-        );
+        case 'plant': {
+          const scale = 0.4;
+          const potHeight = height * scale;
+          const potRadiusTop = width * scale * 0.4;
+          const potRadiusBottom = width * scale * 0.3;
+          const plantRadius = width * scale * 0.5;
+          const leafRadius = width * scale * 0.15;
+        
+          return (
+            <group position={[x, potHeight / 2, -y]}>
+              {/* Pot */}
+              <mesh position={[0, 0, 0]} castShadow receiveShadow>
+                <cylinderGeometry args={[potRadiusTop, potRadiusBottom, potHeight, 16]} />
+                <meshStandardMaterial color="#A0522D" roughness={0.7} />
+              </mesh>
+        
+              {/* Plant base */}
+              <mesh position={[0, potHeight * 0.8, 0]} castShadow receiveShadow>
+                <sphereGeometry args={[plantRadius, 16, 16]} />
+                <meshStandardMaterial color={structureColor} roughness={0.9} />
+              </mesh>
+        
+              {/* Leaves */}
+              {[...Array(20)].map((_, i) => {
+                const phi = Math.acos(-1 + (2 * i) / 20);
+                const theta = Math.sqrt(20 * Math.PI) * phi;
+        
+                const xLeaf = plantRadius * Math.sin(phi) * Math.cos(theta);
+                const yLeaf = plantRadius * Math.sin(phi) * Math.sin(theta) + potHeight * 0.8;
+                const zLeaf = plantRadius * Math.cos(phi);
+        
+                return (
+                  <mesh key={i} position={[xLeaf, yLeaf, zLeaf]} castShadow>
+                    <sphereGeometry args={[leafRadius, 8, 8]} />
+                    <meshStandardMaterial color={structureColor} roughness={0.8} />
+                  </mesh>
+                );
+              })}
+            </group>
+          );
+        }
+        
+        
+        
 
       case 'pool':
         return (

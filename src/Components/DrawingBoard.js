@@ -9,7 +9,7 @@ import { FiDownload, FiGrid, FiBox, FiTrash2, FiRotateCcw, FiRotateCw } from 're
 import ThreeDCanvas from "./ThreeDCanvas";
 import "./DrawingBoard.css";
 import { FloorPlanContext } from '../context/FloorPlanContext';
-import { Rect } from 'react-konva';
+import { Rect, Group  } from 'react-konva';
 
 
 // Global constants
@@ -238,7 +238,7 @@ useEffect(() => {
     { id: 'furniture', label: 'Furniture', icon: '' },
     { id: 'kitchen', label: 'Kitchen & Bath', icon: '' },
     { id: 'fixtures', label: 'Fixtures & Decor', icon: '' },
-    { id: 'outdoor', label: 'Outdoor', icon: '' }
+   
   ];
 
   const categorizedElements = {
@@ -277,7 +277,7 @@ useEffect(() => {
     
     // Kitchen & Bath
     kitchen: [
-      { id: 'kitchen', icon: '', label: 'Kitchen', action: () => handleToolSelect('kitchen') },
+      
       { id: 'stove', icon: '', label: 'Stove', action: () => handleToolSelect('stove') },
       { id: 'refrigerator', icon: '', label: 'Refrigerator', action: () => handleToolSelect('refrigerator') },
       { id: 'kitchen-island', icon: '', label: 'Island', action: () => handleToolSelect('kitchen-island') },
@@ -287,33 +287,23 @@ useEffect(() => {
       { id: 'bath', icon: '', label: 'Bath', action: () => handleToolSelect('bath') },
       { id: 'shower', icon: '', label: 'Shower', action: () => handleToolSelect('shower') },
       { id: 'toilet', icon: '', label: 'Toilet', action: () => handleToolSelect('toilet') },
-      { id: 'vanity', icon: '', label: 'Vanity', action: () => handleToolSelect('vanity') },
+     
     ],
     
     // Fixtures & Decor
     fixtures: [
       { id: 'lamp', icon: '', label: 'Lamp', action: () => handleToolSelect('lamp') },
-      { id: 'ceiling-light', icon: '', label: 'Ceiling Light', action: () => handleToolSelect('ceiling-light') },
+      
       { id: 'chandelier', icon: '', label: 'Chandelier', action: () => handleToolSelect('chandelier') },
       { id: 'carpet', icon: '', label: 'Carpet', action: () => handleToolSelect('carpet') },
       { id: 'tiles', icon: '', label: 'Tiles', action: () => handleToolSelect('tiles') },
       { id: 'plant', icon: '', label: 'Plant', action: () => handleToolSelect('plant') },
-      { id: 'artwork', icon: '', label: 'Artwork', action: () => handleToolSelect('artwork') },
-      { id: 'tv', icon: '', label: 'TV', action: () => handleToolSelect('tv') },
-      { id: 'fireplace', icon: '', label: 'Fireplace', action: () => handleToolSelect('fireplace') },
+      
+      
     ],
     
     // Outdoor elements
-    outdoor: [
-      { id: 'deck', icon: '', label: 'Deck', action: () => handleToolSelect('deck') },
-      { id: 'patio', icon: '', label: 'Patio', action: () => handleToolSelect('patio') },
-      { id: 'pool', icon: '', label: 'Pool', action: () => handleToolSelect('pool') },
-      { id: 'garden', icon: '', label: 'Garden', action: () => handleToolSelect('garden') },
-      { id: 'fence', icon: '', label: 'Fence', action: () => handleToolSelect('fence') },
-      { id: 'path', icon: '', label: 'Path', action: () => handleToolSelect('path') },
-      { id: 'outdoor-furniture', icon: '', label: 'Outdoor Furniture', action: () => handleToolSelect('outdoor-furniture') },
-      { id: 'bbq', icon: '', label: 'BBQ', action: () => handleToolSelect('bbq') },
-    ],
+   
   };
   
   // Get currently displayed elements based on active category
@@ -323,7 +313,12 @@ useEffect(() => {
   const getDefaultWidth = (itemType) => {
     const defaultSizes = {
       'beam': 80,
-      'railing': 45, // was too large, now smaller and more realistic
+      'railing': 45,
+      'lamp': 30,
+      'chandelier': 40,
+      'carpet': 60,
+      'tiles': 40,
+ 
 
 
       'column': 20,
@@ -341,13 +336,13 @@ useEffect(() => {
       'chair': 60,
       'bookshelf': 100,
       'kitchen': 240,
-      'stove': 60,
+      'stove': 35,
       'refrigerator': 70,
-      'kitchen-island': 180,
-      'counter': 200,
+      'kitchen-island': 45,
+      'counter': 50,
       'cabinet': 80,
-      'bath': 170,
-      'shower': 90,
+      'bath': 80,
+      'shower': 25,
       'toilet': 60,
       'vanity': 100,
       'wardrobe': 60,
@@ -366,7 +361,12 @@ useEffect(() => {
     const defaultSizes = {
       'column': 60,
       'beam': 15,
-      'railing': 40, // keeps it slim in the grid
+      'railing': 40, 
+      'lamp': 30,
+      'chandelier': 40,
+      'carpet': 30,
+      'tiles': 40,
+
 
 
 
@@ -383,14 +383,14 @@ useEffect(() => {
       'bed': 50,
       'chair': 60,
       'bookshelf': 40,
-      'kitchen': 60,
-      'stove': 60,
+      'kitchen': 90,
+      'stove': 35,
       'refrigerator': 70,
-      'kitchen-island': 100,
-      'counter': 60,
+      'kitchen-island':45,
+      'counter': 30,
       'cabinet': 60,
-      'bath': 80,
-      'shower': 90,
+      'bath': 30,
+      'shower': 25,
       'toilet': 70,
       'vanity': 60,
       'wardrobe': 20,
@@ -744,6 +744,498 @@ const getWallLength = (wall) => {
     const colorSet = colors[structure.type] || colors.default;
     
     switch (structure.type) {
+
+      case 'plant': {
+        const { x, y, width, height } = structure;
+        const centerX = x + width / 2;
+        const centerY = y + height / 2;
+        const radius = Math.min(width, height) / 2.5;
+      
+        const leafCount = 6;
+        const leafColor = '#32CD32';
+      
+        return (
+          <Group key={structure.id}>
+            {/* Pot */}
+            <Rect
+              x={centerX - 6}
+              y={centerY + radius - 4}
+              width={12}
+              height={8}
+              fill="#8B4513"
+              stroke="#5C3317"
+              cornerRadius={2}
+            />
+      
+            {/* Leaves in a circular pattern */}
+            {Array.from({ length: leafCount }).map((_, i) => {
+              const angle = (i / leafCount) * Math.PI * 2;
+              const leafX = centerX + radius * Math.cos(angle);
+              const leafY = centerY + radius * Math.sin(angle);
+      
+              return (
+                <Line
+                  key={`leaf-${i}`}
+                  points={[centerX, centerY, leafX, leafY]}
+                  stroke={leafColor}
+                  strokeWidth={4}
+                  lineCap="round"
+                  lineJoin="round"
+                />
+              );
+            })}
+      
+            {/* Plant center (stem base) */}
+            <Rect
+              x={centerX - 2}
+              y={centerY - 2}
+              width={4}
+              height={4}
+              fill="#006400"
+              cornerRadius={2}
+            />
+          </Group>
+        );
+      }
+      
+
+      case 'chandelier': {
+        const { x, y, width, height } = structure;
+        const centerX = x + width / 2;
+        const centerY = y + height / 2;
+        const radius = Math.min(width, height) / 2.2;
+      
+        return (
+          <Group key={structure.id}>
+            {/* Outer circle (frame) */}
+            <Line
+              points={[]}
+              sceneFunc={(ctx, shape) => {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2, false);
+                ctx.closePath();
+                ctx.fillStrokeShape(shape);
+              }}
+              fill="#F0E68C"
+              stroke="#DAA520"
+              strokeWidth={2}
+            />
+      
+            {/* Hanging lines (arms) */}
+            {[0, 1, 2, 3, 4, 5].map((i) => {
+              const angle = (i / 6) * Math.PI * 2;
+              const endX = centerX + radius * Math.cos(angle);
+              const endY = centerY + radius * Math.sin(angle);
+      
+              return (
+                <Line
+                  key={`arm-${i}`}
+                  points={[centerX, centerY, endX, endY]}
+                  stroke="#DAA520"
+                  strokeWidth={1}
+                />
+              );
+            })}
+      
+            {/* Central bulb */}
+            <Rect
+              x={centerX - 4}
+              y={centerY - 4}
+              width={8}
+              height={8}
+              fill="#ffff99"
+              cornerRadius={4}
+              shadowBlur={3}
+              shadowColor="#FFD700"
+            />
+          </Group>
+        );
+      }
+      
+
+      case 'lamp': {
+        const { x, y, width, height } = structure;
+      
+        const baseWidth = width * 0.4;
+        const baseHeight = height * 0.2;
+        const bulbRadius = Math.min(width, height) * 0.25;
+        const bulbCenterX = x + width / 2;
+        const bulbCenterY = y + height / 2 - bulbRadius;
+      
+        return (
+          <Group key={structure.id}>
+            {/* Lamp Base */}
+            <Rect
+              x={x + (width - baseWidth) / 2}
+              y={y + height - baseHeight}
+              width={baseWidth}
+              height={baseHeight}
+              fill="#555"
+              stroke="#333"
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Bulb */}
+            <Rect
+              x={bulbCenterX - bulbRadius}
+              y={bulbCenterY - bulbRadius}
+              width={bulbRadius * 2}
+              height={bulbRadius * 2}
+              fill="#ffffcc"
+              stroke="#999900"
+              strokeWidth={1}
+              cornerRadius={bulbRadius}
+              shadowBlur={4}
+              shadowColor="#ffeb3b"
+            />
+      
+            {/* Light rays */}
+            <Line
+              points={[
+                bulbCenterX, bulbCenterY - bulbRadius - 5,
+                bulbCenterX, bulbCenterY - bulbRadius - 12
+              ]}
+              stroke="#ffd700"
+              strokeWidth={1.5}
+            />
+            <Line
+              points={[
+                bulbCenterX - 10, bulbCenterY - 2,
+                bulbCenterX - 18, bulbCenterY - 8
+              ]}
+              stroke="#ffd700"
+              strokeWidth={1.5}
+            />
+            <Line
+              points={[
+                bulbCenterX + 10, bulbCenterY - 2,
+                bulbCenterX + 18, bulbCenterY - 8
+              ]}
+              stroke="#ffd700"
+              strokeWidth={1.5}
+            />
+          </Group>
+        );
+      }
+      
+
+      case 'toilet': {
+        const { x, y, width, height } = structure;
+      
+        return (
+          <>
+            {/* Base Bowl */}
+            <Rect
+              x={x + width * 0.25}
+              y={y + height * 0.4}
+              width={width * 0.5}
+              height={height * 0.45}
+              fill="#f0f0f0"
+              stroke="#ccc"
+              cornerRadius={4}
+            />
+      
+            {/* Seat */}
+            <Rect
+              x={x + width * 0.2}
+              y={y + height * 0.35}
+              width={width * 0.6}
+              height={height * 0.2}
+              fill="#ffffff"
+              stroke="#aaa"
+              cornerRadius={6}
+            />
+      
+            {/* Tank */}
+            <Rect
+              x={x + width * 0.2}
+              y={y}
+              width={width * 0.6}
+              height={height * 0.3}
+              fill="#e0e0e0"
+              stroke="#aaa"
+              cornerRadius={2}
+            />
+          </>
+        );
+      }
+      
+
+      case 'shower': {
+        const { x, y, width, height } = structure;
+      
+        return (
+          <>
+            {/* Shower Base */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill="#e0f7fa"
+              stroke="#00acc1"
+              strokeWidth={2}
+              cornerRadius={6}
+            />
+      
+            {/* Glass Door Panel */}
+            <Rect
+              x={x + width - 6}
+              y={y}
+              width={6}
+              height={height}
+              fill="#b2ebf2"
+              stroke="#007c91"
+              strokeWidth={1}
+            />
+      
+            {/* Shower Head */}
+            <Rect
+              x={x + 4}
+              y={y + 4}
+              width={6}
+              height={6}
+              fill="#555"
+            />
+          </>
+        );
+      }
+      
+
+      case 'bath': {
+        const { x, y, width, height } = structure;
+      
+        return (
+          <>
+            {/* Outer Tub */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill="#dcdcdc"
+              stroke="#888"
+              strokeWidth={2}
+              cornerRadius={6}
+            />
+      
+            {/* Inner Basin */}
+            <Rect
+              x={x + 5}
+              y={y + 5}
+              width={width - 10}
+              height={height - 10}
+              fill="#ffffff"
+              stroke="#bbb"
+              strokeWidth={1}
+              cornerRadius={4}
+            />
+      
+            {/* Faucet */}
+            <Rect
+              x={x + width / 2 - 2}
+              y={y + 4}
+              width={4}
+              height={6}
+              fill="#444"
+            />
+          </>
+        );
+      }
+      
+
+      case 'sink': {
+        const { x, y, width, height } = structure;
+      
+        return (
+          <>
+            {/* Counter Frame */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill="#a9a9a9"
+              stroke="#333"
+              strokeWidth={1.5}
+              cornerRadius={4}
+            />
+      
+            {/* Sink Basin */}
+            <Rect
+              x={x + width * 0.2}
+              y={y + height * 0.2}
+              width={width * 0.6}
+              height={height * 0.6}
+              fill="#b0c4de"
+              stroke="#000"
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Faucet (simple dot) */}
+            <Rect
+              x={x + width / 2 - 2}
+              y={y + height * 0.1 - 2}
+              width={4}
+              height={4}
+              fill="#444"
+              cornerRadius={2}
+            />
+          </>
+        );
+      }
+      
+
+      case 'counter': {
+        const { x, y, width, height } = structure;
+      
+        const topColor = '#D3D3D3'; // lighter top
+        const baseColor = '#A9A9A9'; // darker base
+        const outlineColor = '#333'; // sharp edge line
+      
+        return (
+          <>
+            {/* Base cabinet area */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={baseColor}
+              stroke={outlineColor}
+              strokeWidth={1}
+              cornerRadius={2}
+            />
+      
+            {/* Countertop shading layer */}
+            <Rect
+              x={x + 4}
+              y={y + 4}
+              width={width - 8}
+              height={height - 8}
+              fill={topColor}
+              cornerRadius={2}
+            />
+      
+            {/* Edge lines to make it look 3D-ish */}
+            <Line
+              points={[x, y + height, x + width, y + height]}
+              stroke={outlineColor}
+              strokeWidth={1}
+            />
+            <Line
+              points={[x + width, y, x + width, y + height]}
+              stroke={outlineColor}
+              strokeWidth={1}
+            />
+          </>
+        );
+      }
+      
+      
+
+      case 'kitchen-island': {
+        const topColor = '#DCDCDC';
+        const baseColor = '#a9a9a9';
+        const borderColor = '#666';
+      
+        return (
+          <>
+            {/* Base */}
+            <Rect
+              x={structure.x}
+              y={structure.y}
+              width={structure.width}
+              height={structure.height}
+              fill={baseColor}
+              stroke={borderColor}
+              strokeWidth={1}
+              cornerRadius={3}
+            />
+            {/* Countertop outline */}
+            <Rect
+              x={structure.x - 2}
+              y={structure.y - 2}
+              width={structure.width + 4}
+              height={structure.height + 4}
+              stroke={topColor}
+              strokeWidth={1}
+              dash={[5, 2]}
+            />
+          </>
+        );
+      }
+      
+
+      case 'refrigerator':
+  return (
+    <Group key={structure.id}>
+
+      <Rect
+        x={structure.x - structure.width / 2}
+        y={structure.y - structure.height / 2}
+        width={structure.width}
+        height={structure.height}
+        fill="#b0c4de"
+        stroke="#000"
+        strokeWidth={2}
+        cornerRadius={5}
+      />
+      <Rect
+        x={structure.x + structure.width / 4}
+        y={structure.y - structure.height / 4}
+        width={5}
+        height={structure.height / 2}
+        fill="#333"
+      />
+    </Group>
+  );
+
+
+      case 'stove': {
+        const x = structure.x;
+        const y = structure.y;
+        const width = structure.width;
+        const height = structure.height;
+      
+        const burnerSize = 10;
+        const burnerOffsetX = [10, width - 20];
+        const burnerOffsetY = [10, height - 20];
+      
+        return (
+          <>
+            {/* Stove Frame */}
+            <Rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill="#ccc"
+              stroke="#444"
+              strokeWidth={1}
+              cornerRadius={4}
+            />
+      
+            {/* Burners */}
+            {burnerOffsetX.map((dx, i) =>
+              burnerOffsetY.map((dy, j) => (
+                <Rect
+                  key={`burner-${i}-${j}`}
+                  x={x + dx}
+                  y={y + dy}
+                  width={burnerSize}
+                  height={burnerSize}
+                  fill="#333"
+                  cornerRadius={burnerSize / 2}
+                />
+              ))
+            )}
+          </>
+        );
+      }
+      
       case 'wardrobe': {
         const x = structure.x;
         const y = structure.y;
