@@ -22,7 +22,7 @@ import whiteWallImg from '../Assets/white-wall-textures.jpg';
 import brickWallImg from '../Assets/brick_4_diff_4k.jpg';
 import patternedDoorImg from '../Assets/full-frame-shot-patterned-wall_1048944-16000472.avif';
 import { Group, Rect } from 'react-konva';
-
+import WallWithCutout from './WallWithCutout';
 
 
 
@@ -991,6 +991,7 @@ doorTexture.repeat.set(1, 1);
 />
 
 
+
         {/* Render structures */}
         {structures.map((structure, i) => {
           // Validate structure exists
@@ -1048,20 +1049,27 @@ if (nearestWall) {
   rotationY = Math.atan2(dy, dx);
 }
 
-              return (
-                <Window
-                key={i}
-                position={[structure.x, 75, -structure.y]} // elevate to mid-wall
-                size={{ 
-                  width: structure.width * 0.6,   // narrower
-                  height: structure.height * 0.5  // shorter
-                }}
-                rotation={[0, structure.rotation || 0, 0]}
-                type={structure.type}
-              />
-              
-              
-              );
+return (
+  <group
+    key={i}
+    position={[structure.x, 45, -structure.y]} // lowered from 75 to 45
+    rotation={[0, rotationY, 0]}
+  >
+    <mesh castShadow receiveShadow position={[0, 0, 6]}>
+      <boxGeometry args={[structure.width * 0.6, structure.height * 0.5, 2]} />
+      <meshPhysicalMaterial
+        color="#87CEEB"
+        transmission={0.9}
+        transparent
+        opacity={0.5}
+        roughness={0.1}
+        metalness={0.05}
+        clearcoat={0.1}
+      />
+    </mesh>
+  </group>
+);
+
               
             case "skylight":
               return (
@@ -1376,6 +1384,26 @@ const getStructureCenter = (walls = []) => {
   const centerY = (minY + maxY) / 2;
 
   return new THREE.Vector3(centerX, 10, -centerY); // y=10 so camera aims at model height
+};
+
+const findNearestWall = (structure, walls) => {
+  let minDist = Infinity;
+  let nearestWall = null;
+
+  walls.forEach(wall => {
+    if (!wall.x1 || !wall.y1 || !wall.x2 || !wall.y2) return;
+
+    const midX = (wall.x1 + wall.x2) / 2;
+    const midY = (wall.y1 + wall.y2) / 2;
+    const dist = Math.hypot(midX - structure.x, midY - structure.y);
+
+    if (dist < minDist) {
+      minDist = dist;
+      nearestWall = wall;
+    }
+  });
+
+  return nearestWall;
 };
 
 

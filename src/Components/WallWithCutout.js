@@ -1,37 +1,48 @@
-import React from 'react';
-import * as THREE from 'three';
-import { ExtrudeGeometry } from 'three';
-import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+// src/Components/WallWithCutout.js
+import React from "react";
+import * as THREE from "three";
 
-const WallWithCutout = ({ length, height, thickness, cutouts = [], material }) => {
+const WallWithCutout = ({ wall, structure }) => {
+  const { x1, y1, x2, y2 } = wall;
+  const windowWidth = structure.width || 100;
+  const windowHeight = structure.height || 100;
+  const height = 150; // same wall height
+  const thickness = 5; // thin overlay
+
+  // Wall orientation
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const wallLength = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx);
+
+  const centerX = (x1 + x2) / 2;
+  const centerZ = (y1 + y2) / 2;
+
   const shape = new THREE.Shape();
-  shape.moveTo(0, 0);
-  shape.lineTo(0, height);
-  shape.lineTo(length, height);
-  shape.lineTo(length, 0);
-  shape.lineTo(0, 0);
+  shape.moveTo(-wallLength / 2, -height / 2);
+  shape.lineTo(wallLength / 2, -height / 2);
+  shape.lineTo(wallLength / 2, height / 2);
+  shape.lineTo(-wallLength / 2, height / 2);
+  shape.lineTo(-wallLength / 2, -height / 2);
 
-  cutouts.forEach(({ x, y, w, h }) => {
-    const hole = new THREE.Path();
-    hole.moveTo(x, y);
-    hole.lineTo(x, y + h);
-    hole.lineTo(x + w, y + h);
-    hole.lineTo(x + w, y);
-    hole.lineTo(x, y);
-    shape.holes.push(hole);
-  });
+  const hole = new THREE.Path();
+  hole.moveTo(-windowWidth / 2, -windowHeight / 2);
+  hole.lineTo(windowWidth / 2, -windowHeight / 2);
+  hole.lineTo(windowWidth / 2, windowHeight / 2);
+  hole.lineTo(-windowWidth / 2, windowHeight / 2);
+  hole.lineTo(-windowWidth / 2, -windowHeight / 2);
+  shape.holes.push(hole);
 
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: thickness,
-    bevelEnabled: false
-  });
-
-  geometry.center();
+  const geometry = new THREE.ShapeGeometry(shape);
+  geometry.translate(0, height / 2, 0); // lift wall to floor level
 
   return (
-    <mesh geometry={geometry} castShadow receiveShadow>
-      <meshStandardMaterial attach="material" {...material} />
+    <mesh
+      geometry={geometry}
+      position={[centerX, 0, centerZ]}
+      rotation={[0, -angle, 0]}
+    >
+      <meshStandardMaterial color="#ffffff" />
     </mesh>
   );
 };
