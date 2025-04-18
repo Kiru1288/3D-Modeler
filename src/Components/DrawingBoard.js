@@ -438,7 +438,7 @@ useEffect(() => {
         });
     
         if (!nearWall) {
-          console.log("❌ Cannot place window — must touch a wall.");
+          
           return;
         }
       }
@@ -520,7 +520,7 @@ const snappedEnd = snapEnd
       };
       
       if (snappedEnd.x !== currentLine.x2 || snappedEnd.y !== currentLine.y2) {
-        console.log("🔗 Auto-snapped endpoint to:", snappedEnd);
+       
       }
       
       if (["door", "sliding-door", "french-door", "window", "bay-window", "skylight"].includes(currentTool)) {
@@ -2079,7 +2079,7 @@ const getWallLength = (wall) => {
     resetStructures([]);
     setHistory([{ walls: [], structures: [] }]);
     setHistoryIndex(0);
-    console.log("🧼 Canvas cleared.");
+   
   }} title="Clear Canvas">
     <FiTrash2 className="button-icon" />
     <span className="button-label">Clear Canvas</span>

@@ -337,7 +337,7 @@ const Scene = ({ walls = [], is3DMode, previewMode, structures = [] }) => {
         zoomSpeed={0.8}
         panSpeed={0.5}
         minDistance={300}
-        maxDistance={100000}
+        maxDistance={300}
         maxPolarAngle={Math.PI / 2.1}
         screenSpacePanning={true}
         target={[0, 0, 0]}
@@ -376,7 +376,7 @@ if (wall.type === "room") {
                <Wall 
   key={i} 
   {...wall} 
-  height={150}     // closer to door height
+  height={40}     // closer to door height
   thickness={10}   // thinner and not intrusive
   type={wall.type}
   material={wallMaterial}
@@ -631,21 +631,39 @@ const snapWalls = (walls, threshold = 10) => {
   }
 };
 
-const DynamicCamera = ({ walls }) => {
+const DynamicCamera = ({ walls, controlsRef }) => {
+
   const cameraRef = useRef();
   const { set } = useThree();
 
+  
+
   useEffect(() => {
     if (!walls || walls.length === 0) return;
-
+  
     const center = getStructureCenter(walls);
     const camera = cameraRef.current;
-
-    camera.position.set(center.x + 300, 250, center.z + 300);
+  
+    // Dynamically calculate scene bounds
+    const bounds = new THREE.Box3();
+    walls.forEach(w => {
+      bounds.expandByPoint(new THREE.Vector3(w.x1, 0, -w.y1));
+      bounds.expandByPoint(new THREE.Vector3(w.x2, 0, -w.y2));
+    });
+    const size = bounds.getSize(new THREE.Vector3()).length();
+    const distance = size * 1.2;
+  
+    // Position the camera based on bounds
+    camera.position.set(center.x + distance, distance, center.z + distance);
     camera.lookAt(center.x, center.y, center.z);
-
     set({ camera });
+  
+    if (controlsRef?.current) {
+      controlsRef.current.target.set(center.x, center.y, center.z);
+      controlsRef.current.update();
+    }
   }, [walls, set]);
+  
 
   return <PerspectiveCamera ref={cameraRef} makeDefault fov={60} />;
 };
@@ -881,25 +899,38 @@ doorTexture.repeat.set(1, 1);
   
   return (
     <>
-      <Canvas 
-        shadows
-        gl={{ 
-          antialias: true, 
-          alpha: false,
-          powerPreference: "high-performance",
-          depth: true,
-          stencil: false,
-          preserveDrawingBuffer: true
-        }} 
-        camera={{ fov: 45, near: 10, far: 200000 }}
-        ref={canvasRef}
-        style={{ background: "#b3d9ff" }} // Soft light blue matching screenshot
-        dpr={[1, 2]} // Responsive pixel ratio
-      >
+
+
+
+<Canvas
+  shadows
+  gl={{ 
+    antialias: true, 
+    alpha: false,
+    powerPreference: "high-performance",
+    depth: true,
+    stencil: false,
+    preserveDrawingBuffer: true,
+    toneMappingExposure: 1.2,
+  }}
+  onCreated={({ gl }) => {
+    gl.setClearColor("#91c788"); // Match your plane/floor color
+
+  }}
+  camera={{ fov: 45, near: 0.1, far: 10000 }}
+  ref={canvasRef}
+  style={{ background: "#b3d9ff" }}
+  dpr={[1, 2]}
+>
+  {/* 🔵 Sky dome */}
+ 
+
+  {/* 🔵 Fog to blend distant objects */}
+  
         {/* Simple sky settings */}
         <Sky
   distance={5000}
-  sunPosition={[0, 1, 0]}
+  sunPosition={[200, 500, 100]}
   inclination={0.6}
   azimuth={0.25}
   rayleigh={0.01}
@@ -908,9 +939,13 @@ doorTexture.repeat.set(1, 1);
   mieDirectionalG={0.8}
   exposure={1.0}
   renderOrder={-10}
-  material-transparent
-  material-depthWrite={false}
+  material-transparent={false}
+  material-depthWrite={true} // ✅ important!
 />
+
+
+
+
 
 
 
@@ -944,7 +979,8 @@ doorTexture.repeat.set(1, 1);
         <Lighting />
         
         {/* Enhanced floor with reference markers */}
-        <Floor type="GRASS" />
+        <Floor walls={snappedWalls} />
+
         
         {/* Render walls */}
         <Scene 
@@ -1246,6 +1282,8 @@ case "sliding-door": {
     speed={45}
     controlsRef={controlsRef}
     onEnd={() => setPreviewMode(false)}
+    maxPolarAngle={Math.PI / 2.5} // ⬅️ Already done, but try reducing it more if needed
+
   />
 ) : (
   <DynamicCamera walls={snappedWalls} />
@@ -1293,30 +1331,21 @@ case "sliding-door": {
 const Floor = () => {
   const grassTexture = useLoader(THREE.TextureLoader, grassTextureImg);
   grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
-  grassTexture.repeat.set(1000, 1000); // Smoother, repeating look
-  grassTexture.anisotropy = 16;
-  
+  grassTexture.repeat.set(5000, 5000); // massive tile repeat
 
   return (
-    <group>
-       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, 0.5, 0]}>
-      {/* 🔁 Flat rectangle ground, not a circle */}
-      <planeGeometry args={[5000, 5000]} />
-
-      <meshStandardMaterial map={grassTexture} side={THREE.DoubleSide} />
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      receiveShadow
+      position={[0, 0, 0]} // always centered
+    >
+      <planeGeometry args={[100000, 100000]} /> {/* ⬅️ Big enough to look infinite */}
+      <meshStandardMaterial
+        map={grassTexture}
+        color="#91c788"
+        side={THREE.DoubleSide}
+      />
     </mesh>
-
-      {/* Optional: light grid pattern */}
-      <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[500000, 128]} />
-        <meshBasicMaterial
-          color="#b7d7a8"
-          wireframe={true}
-          transparent
-          opacity={0.1}
-        />
-      </mesh>
-    </group>
   );
 };
 
