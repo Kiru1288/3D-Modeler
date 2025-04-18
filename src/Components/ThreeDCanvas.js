@@ -372,7 +372,7 @@ if (wall.type === "room") {
             
             return (
               <>
-                {console.log(`🧱 Wall ${i}: (${wall.x1}, ${wall.y1}) to (${wall.x2}, ${wall.y2})`)}
+               
                <Wall 
   key={i} 
   {...wall} 
@@ -695,9 +695,9 @@ doorTexture.repeat.set(1, 1);
 
   useEffect(() => {
     const newPath = generateWalkthroughPath(snappedWalls, structures);
-    console.log("🚶 Walkthrough Path:");
+    
     newPath.forEach((point, index) => {
-      console.log(`   Step ${index + 1}: (${point[0]}, ${point[1]}, ${point[2]})`);
+     
     });
   
     setWalkThroughPath((prevPath) => {
