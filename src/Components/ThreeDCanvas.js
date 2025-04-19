@@ -337,7 +337,7 @@ const Scene = ({ walls = [], is3DMode, previewMode, structures = [] }) => {
         zoomSpeed={0.8}
         panSpeed={0.5}
         minDistance={300}
-        maxDistance={300}
+        maxDistance={800}
         maxPolarAngle={Math.PI / 2.1}
         screenSpacePanning={true}
         target={[0, 0, 0]}
