@@ -1,35 +1,51 @@
 import React, { useState } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import DrawingBoard from "./Components/DrawingBoard";
 import ThreeDCanvas from "./Components/ThreeDCanvas";
 import { FloorPlanProvider } from "./context/FloorPlanContext";
-import StartScreen from "./Components/StartScreen"; 
+import StartScreen from "./Components/StartScreen";
+import ExampleGallery from "./Components/ExampleGallery";
 import "./styling/App.css";
 
 function App() {
-  // State Variables:
-  // eslint-disable-next-line no-unused-vars
   const [colorScheme, setColorScheme] = useState("light");
-  // eslint-disable-next-line no-unused-vars
   const [currentTool, setCurrentTool] = useState(null);
-
-  // New: Track the project name, if null show StartScreen first
   const [projectName, setProjectName] = useState(null);
 
-  // 8. Conditional Rendering
-  // If no project name is entered, show StartScreen before rendering the main app
-  if (!projectName) {
+  const location = useLocation();
+
+  // Only show StartScreen on "/" route
+  if (!projectName && location.pathname === "/") {
     return <StartScreen onStart={setProjectName} />;
   }
 
-  // 9. Rendering the App UI
   return (
     <FloorPlanProvider>
       <div className={`App ${colorScheme}`}>
-        <DrawingBoard currentTool={currentTool} />
-        <ThreeDCanvas />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <DrawingBoard currentTool={currentTool} />
+                <ThreeDCanvas />
+              </>
+            }
+          />
+          <Route path="/examples" element={<ExampleGallery />} />
+        </Routes>
       </div>
     </FloorPlanProvider>
   );
 }
 
-export default App;
+// Wrap with Router
+function AppWrapper() {
+  return (
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  );
+}
+
+export default AppWrapper;

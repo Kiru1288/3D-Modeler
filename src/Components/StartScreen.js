@@ -64,14 +64,22 @@ const StartScreen = ({ onStart }) => {
       />
       {error && <div className="error-message">{error}</div>}
       <div className="start-buttons">
-        <button
-        className="toolbar-btn start-action-btn"
-        onClick={handleStart}
-        disabled={loading}
-        >
-        {loading ? "Starting..." : <><FiPlay /> Start from Scratch</>}
-        </button>
-      </div>
+  <button
+    className="toolbar-btn start-action-btn"
+    onClick={handleStart}
+    disabled={loading}
+  >
+    {loading ? "Starting..." : <><FiPlay /> Start from Scratch</>}
+  </button>
+
+  <button
+    className="toolbar-btn start-action-btn"
+    onClick={() => window.location.href = "/examples"}
+  >
+    <FiCopy /> Browse Example Floorplans
+  </button>
+</div>
+
       </div>
     </div>
     );
