@@ -1,4 +1,4 @@
-Here’s an improved and customized `README.md` for your **3D Modeler** app, designed to guide **new users and developers** in setting up and running the project smoothly:
+
 
 ---
 
