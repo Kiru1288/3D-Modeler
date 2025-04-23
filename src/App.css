@@ -1,0 +1,294 @@
+:root {
+  --background-light: #f7f7f7;
+  --background-dark: #1e1e1e;
+  --text-light: #333;
+  --text-dark: #fff;
+  --primary-color: gold;
+  --accent-color: #ff7f50;
+}
+
+body {
+  background-color: var(--background-light);
+  color: var(--text-light);
+  font-family: 'Arial', sans-serif;
+  transition: background 0.5s ease-in-out, color 0.5s ease-in-out;
+}
+
+body.dark-mode {
+  background-color: var(--background-dark);
+  color: var(--text-dark);
+}
+
+.glassmorphism {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: black;
+  border-bottom: 2px solid gold;
+  border-radius: 10px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  transition: all 0.3s ease-in-out;
+}
+
+.center-btn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.menu-toggle {
+  background: black;
+  color: gold;
+  border: 2px solid gold;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.menu-toggle:hover {
+  background: gold;
+  color: black;
+}
+
+.menu-content {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+}
+
+.menu-content.open {
+  display: block;
+  transition: max-height 0.3s ease-out;
+}
+
+.side-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.primary-btn {
+  background: linear-gradient(145deg, #1a1a1a, #444);
+  color: gold;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 2px solid gold;
+  box-shadow: 4px 4px 8px rgba(255, 215, 0, 0.5);
+  transition: all 0.3s ease-in-out;
+}
+
+.primary-btn:hover {
+  background: gold;
+  color: black;
+  box-shadow: inset 4px 4px 8px rgba(255, 215, 0, 0.5);
+  transform: scale(1.05);
+}
+
+.button-31 {
+  background: black;
+  color: gold;
+  border-radius: 6px;
+  border: 2px solid gold;
+  font-weight: bold;
+  padding: 10px 15px;
+  transition: all 0.3s ease-in-out;
+}
+
+.button-31:hover {
+  background: gold;
+  color: black;
+  transform: scale(1.05);
+}
+
+/* ✅ New input styling for auth forms */
+.input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  background-color: #1f1f1f;
+  color: white;
+  border: 1px solid #333;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+select.input {
+  background-color: white;
+  color: black;
+}
+
+/* ✅ Signup page layout & card */
+.signup-container {
+  background: linear-gradient(to bottom right, #0f0f0f, #1a1a1a);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 20px;
+}
+
+.signup-card {
+  background-color: #1a1a1a;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #cdb937;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.signup-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #cdb937;
+  margin-bottom: 20px;
+}
+
+.signup-error {
+  color: #ff5555;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.signup-success {
+  color: #22c55e;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.signup-btn {
+  background-color: #cdb937;
+  color: black;
+  font-weight: bold;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.signup-btn:hover {
+  background-color: #b49b2e;
+}
+
+.signup-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.signup-divider {
+  margin: 20px 0;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.google-btn,
+.facebook-btn,
+.yahoo-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  color: white;
+}
+
+.google-btn {
+  background: #db4437;
+}
+.google-btn:hover {
+  background: #c1351d;
+}
+
+.facebook-btn {
+  background: #1877f2;
+}
+.facebook-btn:hover {
+  background: #155ecb;
+}
+
+.yahoo-btn {
+  background: #6001d2;
+}
+.yahoo-btn:hover {
+  background: #4b00aa;
+}
+
+.signup-footer {
+  margin-top: 20px;
+  color: #aaa;
+}
+
+.signup-link {
+  color: #cdb937;
+  font-weight: bold;
+  text-decoration: none;
+}
+.signup-link:hover {
+  text-decoration: underline;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: gold;
+}
+
+.signup-input {
+  padding: 12px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #121212;
+  color: white;
+  font-size: 16px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.signup-input:focus {
+  border-color: #cdb937;
+  outline: none;
+}
+
